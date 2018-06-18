@@ -74,7 +74,7 @@ def draw_screen():
     window.bgcolor("black")
     window.setup(700, 700)
     window.title("Sky Turtle")
-    window.tracer(0)
+    window.tracer(0, 0)
 
     return window
 
@@ -97,7 +97,7 @@ def main():
     new_game()
 
     window = draw_screen()
-    fps = 90
+    fps = 60
     time_delta = 1.0/fps
 
     border = Border()
@@ -111,6 +111,7 @@ def main():
         time.sleep(time_delta)
         window.update()
 
+        # kill_switch() method assigned to "p" will break the game loop
         if not player.isvisible():
             player_lives = False
 
