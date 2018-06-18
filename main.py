@@ -14,14 +14,32 @@ class Player(turtle.Turtle):
         self.setheading(90)
 
     def move_ahead(self):
-        past_x = self.xcor()
         past_y = self.ycor()
 
         self.forward(20)
-        if abs(self.xcor()) > 300:
-            self.setposition(past_x, past_y)
         if abs(self.ycor()) > 300:
-            self.setposition(past_x, past_y)
+            self.setposition(self.xcor(), past_y)
+
+    def move_right(self):
+        past_x = self.xcor()
+
+        self.setposition(past_x + 20, self.ycor())
+        if self.xcor() > 300:
+            self.setposition(past_x, self.ycor())
+
+    def move_left(self):
+        past_x = self.xcor()
+
+        self.setposition(past_x - 20, self.ycor())
+        if self.xcor() < -300:
+            self.setposition(past_x, self.ycor())
+
+    def move_back(self):
+        past_y = self.ycor()
+
+        self.backward(20)
+        if self.ycor() < -300:
+            self.setposition(self.xcor(), past_y)
 
     # temporary method for testing/debugging convenience
     def kill_switch(self):
@@ -66,6 +84,9 @@ def create_player():
 
     turtle.listen()
     turtle.onkey(player.move_ahead, "w")
+    turtle.onkey(player.move_right, "d")
+    turtle.onkey(player.move_left, "a")
+    turtle.onkey(player.move_back, "s")
     turtle.onkey(player.kill_switch, "p")
 
     return player
