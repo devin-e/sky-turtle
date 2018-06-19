@@ -1,6 +1,7 @@
 import turtle
 import time
 import random
+import math
 
 
 class Player(turtle.Turtle):
@@ -15,6 +16,7 @@ class Player(turtle.Turtle):
         self.y_speed = 0
         self.x_speed = 0
         self.bullet_delay = 0
+        self.lives = True
 
     # move forward
     def increase_y_speed(self):
@@ -60,9 +62,8 @@ class Player(turtle.Turtle):
         if self.bullet_delay > 0:
             self.bullet_delay -= 1
 
-    # temporary method for testing/debugging convenience
-    def kill_switch(self):
-        self.hideturtle()
+    def die(self):
+        self.lives = False
 
 
 class Enemy(turtle.Turtle):
@@ -134,7 +135,7 @@ def create_player():
     turtle.onkey(player.increase_x_speed, "d")
     turtle.onkey(player.decrease_x_speed, "a")
     turtle.onkey(player.decrease_y_speed, "s")
-    turtle.onkey(player.kill_switch, "p")
+    turtle.onkey(player.die, "p")
     turtle.onkey(player.shoot, "u")
 
     return player
@@ -145,9 +146,13 @@ def bullet_advance():
         bullet.forward(10)
 
         if bullet.ycor() > 300:
-            bullet.clear()
-            bullet.hideturtle()
-            bullet_list.remove(bullet)
+            kill_bullet(bullet)
+
+
+def kill_bullet(bullet):
+    bullet.clear()
+    bullet.hideturtle()
+    bullet_list.remove(bullet)
 
 
 def spawn_enemy():
@@ -167,12 +172,33 @@ def enemy_advance():
         enemy.forward(enemy.move_speed)
 
         if enemy.ycor() < -300:
-            enemy.clear()
-            enemy.hideturtle()
-            enemy_list.remove(enemy)
+            kill_enemy(enemy)
+
+
+def kill_enemy(enemy):
+    enemy.clear()
+    enemy.hideturtle()
+    enemy_list.remove(enemy)
 
 
 # add collision detection
+def detect_collision(player):
+    for enemy in enemy_list:
+        for bullet in bullet_list:
+            a = bullet.xcor() - enemy.xcor()
+            b = bullet.ycor() - enemy.ycor()
+            distance = math.hypot(a, b)
+
+            if distance < 20:
+                kill_bullet(bullet)
+                kill_enemy(enemy)
+
+        a = player.xcor() - enemy.xcor()
+        b = player.ycor() - enemy.ycor()
+        distance = math.hypot(a, b)
+
+        if distance < 20:
+            player.die()
 
 
 bullet_list = []
@@ -192,9 +218,7 @@ def main():
 
     player = create_player()
 
-    player_lives = True
-
-    while player_lives:
+    while player.lives:
         time.sleep(time_delta)
         window.update()
 
@@ -202,14 +226,10 @@ def main():
         player.reload()
 
         spawn_enemy()
-
+        detect_collision(player)
         bullet_advance()
 
         enemy_advance()
-
-        # kill_switch() method assigned to "p" will break the game loop
-        if not player.isvisible():
-            player_lives = False
 
     window.bgcolor("red")
 
