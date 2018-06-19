@@ -11,36 +11,41 @@ class Player(turtle.Turtle):
         self.speed(0)
         self.shape("turtle")
         self.color("white")
-        self.move_speed = 1
         self.setheading(90)
+        self.y_speed = 0
+        self.x_speed = 0
 
-    def move_ahead(self):
-        past_y = self.ycor()
+    # move forward
+    def increase_y_speed(self):
+        if self.y_speed < 4.5:
+            self.y_speed += 1.5
 
-        self.forward(20)
+    # move back
+    def decrease_y_speed(self):
+        if self.y_speed > -4.5:
+            self.y_speed -= 1.5
+
+    # move right
+    def increase_x_speed(self):
+        if self.x_speed < 4.5:
+            self.x_speed += 1.5
+
+    # move left
+    def decrease_x_speed(self):
+        if self.x_speed > -4.5:
+            self.x_speed -= 1.5
+
+    # constant flight
+    def constant_flight(self):
+        self.setposition((self.xcor() + self.x_speed),
+                        (self.ycor() + self.y_speed))
+
+        if abs(self.xcor()) > 300:
+            self.setposition((self.xcor() - self.x_speed), self.ycor())
+
         if abs(self.ycor()) > 300:
-            self.setposition(self.xcor(), past_y)
+            self.setposition(self.xcor(), (self.ycor() - self.y_speed))
 
-    def move_right(self):
-        past_x = self.xcor()
-
-        self.setposition(past_x + 20, self.ycor())
-        if self.xcor() > 300:
-            self.setposition(past_x, self.ycor())
-
-    def move_left(self):
-        past_x = self.xcor()
-
-        self.setposition(past_x - 20, self.ycor())
-        if self.xcor() < -300:
-            self.setposition(past_x, self.ycor())
-
-    def move_back(self):
-        past_y = self.ycor()
-
-        self.backward(20)
-        if self.ycor() < -300:
-            self.setposition(self.xcor(), past_y)
 
     def shoot(self):
         bullet = Bullet()
@@ -119,10 +124,10 @@ def create_player():
     player = Player()
 
     turtle.listen()
-    turtle.onkey(player.move_ahead, "w")
-    turtle.onkey(player.move_right, "d")
-    turtle.onkey(player.move_left, "a")
-    turtle.onkey(player.move_back, "s")
+    turtle.onkey(player.increase_y_speed, "w")
+    turtle.onkey(player.increase_x_speed, "d")
+    turtle.onkey(player.decrease_x_speed, "a")
+    turtle.onkey(player.decrease_y_speed, "s")
     turtle.onkey(player.kill_switch, "p")
     turtle.onkey(player.shoot, "u")
 
@@ -182,6 +187,8 @@ def main():
     while player_lives:
         time.sleep(time_delta)
         window.update()
+
+        player.constant_flight()
 
         # enemy_spawn_delay_count()
         enemy_spawn_delay += 1
