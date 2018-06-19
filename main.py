@@ -56,6 +56,10 @@ class Player(turtle.Turtle):
             bullet_list.append(bullet)
             self.bullet_delay = 10
 
+    def reload(self):
+        if self.bullet_delay > 0:
+            self.bullet_delay -= 1
+
     # temporary method for testing/debugging convenience
     def kill_switch(self):
         self.hideturtle()
@@ -147,11 +151,15 @@ def bullet_advance():
 
 
 def spawn_enemy():
-    enemy = Enemy()
-    random_x_location = random.randint(-280, 280)
-    enemy.setposition(random_x_location, 300)
-    enemy.showturtle()
-    enemy_list.append(enemy)
+    global enemy_spawn_delay
+    enemy_spawn_delay += 1
+    if enemy_spawn_delay > 180:
+        enemy = Enemy()
+        random_x_location = random.randint(-280, 280)
+        enemy.setposition(random_x_location, 300)
+        enemy.showturtle()
+        enemy_list.append(enemy)
+        enemy_spawn_delay = 0
 
 
 def enemy_advance():
@@ -162,6 +170,9 @@ def enemy_advance():
             enemy.clear()
             enemy.hideturtle()
             enemy_list.remove(enemy)
+
+
+# add collision detection
 
 
 bullet_list = []
@@ -183,25 +194,18 @@ def main():
 
     player_lives = True
 
-    global enemy_spawn_delay
-
     while player_lives:
         time.sleep(time_delta)
         window.update()
 
         player.constant_flight()
-        if player.bullet_delay > 0:
-            player.bullet_delay -= 1
+        player.reload()
 
-        # enemy_spawn_delay_count()
-        enemy_spawn_delay += 1
-        if enemy_spawn_delay > 180:
-            spawn_enemy()
-            enemy_spawn_delay = 0
-
-        enemy_advance()
+        spawn_enemy()
 
         bullet_advance()
+
+        enemy_advance()
 
         # kill_switch() method assigned to "p" will break the game loop
         if not player.isvisible():
