@@ -41,6 +41,14 @@ class Player(turtle.Turtle):
         if self.ycor() < -300:
             self.setposition(self.xcor(), past_y)
 
+    def shoot(self):
+        bullet = Bullet()
+        bullet.setposition(self.xcor(), self.ycor())
+        bullet.forward(25)
+        bullet.showturtle()
+        bullet_list.append(bullet)
+
+
     # temporary method for testing/debugging convenience
     def kill_switch(self):
         self.hideturtle()
@@ -62,6 +70,20 @@ class Border(turtle.Turtle):
         for _ in range(4):
             self.forward(600)
             self.left(90)
+
+# Bullet objects are instantiated in the Player().shoot() method
+# Bullet object behaviour is defined later in the bullet_advance() function
+class Bullet(turtle.Turtle):
+
+    def __init__(self):
+        turtle.Turtle.__init__(self)
+        self.hideturtle()
+        self.penup()
+        self.shape("classic")
+        self.color("red")
+        self.shapesize(0.75, 0.75)
+        self.setheading(90)
+        self.speed(0)
 
 
 def new_game():
@@ -88,9 +110,23 @@ def create_player():
     turtle.onkey(player.move_left, "a")
     turtle.onkey(player.move_back, "s")
     turtle.onkey(player.kill_switch, "p")
+    turtle.onkey(player.shoot, "u")
 
     return player
 
+
+def bullet_advance():
+    if len(bullet_list) > 0:
+        for bullet in bullet_list:
+            bullet.forward(10)
+
+            if bullet.ycor() > 300:
+                bullet.clear()
+                bullet.hideturtle()
+                bullet_list.remove(bullet)
+
+
+bullet_list = []
 
 def main():
 
@@ -110,6 +146,8 @@ def main():
     while player_lives:
         time.sleep(time_delta)
         window.update()
+
+        bullet_advance()
 
         # kill_switch() method assigned to "p" will break the game loop
         if not player.isvisible():
