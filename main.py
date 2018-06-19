@@ -1,5 +1,6 @@
 import turtle
 import time
+import random
 
 
 class Player(turtle.Turtle):
@@ -54,6 +55,19 @@ class Player(turtle.Turtle):
         self.hideturtle()
 
 
+class Enemy(turtle.Turtle):
+
+    def __init__(self):
+        turtle.Turtle.__init__(self)
+        self.penup()
+        self.hideturtle()
+        self.speed(0)
+        self.color("yellow")
+        self.shape("square")
+        self.setheading(270)
+        self.move_speed = 5
+
+
 class Border(turtle.Turtle):
 
     def __init__(self):
@@ -65,7 +79,7 @@ class Border(turtle.Turtle):
         self.pensize(5)
 
     def draw_border(self):
-        self.goto(-300, -300)
+        self.setposition(-300, -300)
         self.pendown()
         for _ in range(4):
             self.forward(600)
@@ -125,7 +139,28 @@ def bullet_advance():
             bullet_list.remove(bullet)
 
 
+def spawn_enemy():
+    enemy = Enemy()
+    random_x_location = random.randint(-280, 280)
+    enemy.setposition(random_x_location, 300)
+    enemy.showturtle()
+    enemy_list.append(enemy)
+
+
+def enemy_advance():
+    for enemy in enemy_list:
+        enemy.forward(enemy.move_speed)
+
+        if enemy.ycor() < -300:
+            enemy.clear()
+            enemy.hideturtle()
+            enemy_list.remove(enemy)
+
+
+
 bullet_list = []
+enemy_list = []
+enemy_spawn_delay = 0
 
 def main():
 
@@ -142,9 +177,19 @@ def main():
 
     player_lives = True
 
+    global enemy_spawn_delay
+
     while player_lives:
         time.sleep(time_delta)
         window.update()
+
+        # enemy_spawn_delay_count()
+        enemy_spawn_delay += 1
+        if enemy_spawn_delay > 180:
+            spawn_enemy()
+            enemy_spawn_delay = 0
+
+        enemy_advance()
 
         bullet_advance()
 
