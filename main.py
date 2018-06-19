@@ -14,6 +14,7 @@ class Player(turtle.Turtle):
         self.setheading(90)
         self.y_speed = 0
         self.x_speed = 0
+        self.bullet_delay = 0
 
     # move forward
     def increase_y_speed(self):
@@ -46,14 +47,14 @@ class Player(turtle.Turtle):
         if abs(self.ycor()) > 300:
             self.setposition(self.xcor(), (self.ycor() - self.y_speed))
 
-
     def shoot(self):
-        bullet = Bullet()
-        bullet.setposition(self.xcor(), self.ycor())
-        bullet.forward(25)
-        bullet.showturtle()
-        bullet_list.append(bullet)
-
+        if self.bullet_delay <= 0:
+            bullet = Bullet()
+            bullet.setposition(self.xcor(), self.ycor())
+            bullet.forward(25)
+            bullet.showturtle()
+            bullet_list.append(bullet)
+            self.bullet_delay = 10
 
     # temporary method for testing/debugging convenience
     def kill_switch(self):
@@ -89,6 +90,7 @@ class Border(turtle.Turtle):
         for _ in range(4):
             self.forward(600)
             self.left(90)
+
 
 # Bullet objects are instantiated in the Player().shoot() method
 # Bullet object behaviour is defined later in the bullet_advance() function
@@ -162,7 +164,6 @@ def enemy_advance():
             enemy_list.remove(enemy)
 
 
-
 bullet_list = []
 enemy_list = []
 enemy_spawn_delay = 0
@@ -189,6 +190,8 @@ def main():
         window.update()
 
         player.constant_flight()
+        if player.bullet_delay > 0:
+            player.bullet_delay -= 1
 
         # enemy_spawn_delay_count()
         enemy_spawn_delay += 1
