@@ -78,6 +78,11 @@ class Enemy(turtle.Turtle):
         self.setheading(270)
         self.move_speed = 5
 
+    def die(self):
+        self.clear()
+        self.hideturtle()
+        enemy_list.remove(self)
+
 
 class Border(turtle.Turtle):
 
@@ -97,8 +102,6 @@ class Border(turtle.Turtle):
             self.left(90)
 
 
-# Bullet objects are instantiated in the Player().shoot() method
-# Bullet object behaviour is defined later in the bullet_advance() function
 class Bullet(turtle.Turtle):
 
     def __init__(self):
@@ -110,6 +113,11 @@ class Bullet(turtle.Turtle):
         self.shapesize(0.75, 0.75)
         self.setheading(90)
         self.speed(0)
+
+    def die(self):
+        self.clear()
+        self.hideturtle()
+        bullet_list.remove(self)
 
 
 def new_game():
@@ -146,13 +154,7 @@ def bullet_advance():
         bullet.forward(10)
 
         if bullet.ycor() > 300:
-            kill_bullet(bullet)
-
-
-def kill_bullet(bullet):
-    bullet.clear()
-    bullet.hideturtle()
-    bullet_list.remove(bullet)
+            bullet.die()
 
 
 def spawn_enemy():
@@ -172,16 +174,9 @@ def enemy_advance():
         enemy.forward(enemy.move_speed)
 
         if enemy.ycor() < -300:
-            kill_enemy(enemy)
+            enemy.die()
 
 
-def kill_enemy(enemy):
-    enemy.clear()
-    enemy.hideturtle()
-    enemy_list.remove(enemy)
-
-
-# add collision detection
 def detect_collision(player):
     for enemy in enemy_list:
         for bullet in bullet_list:
@@ -190,8 +185,8 @@ def detect_collision(player):
             distance = math.hypot(a, b)
 
             if distance < 20:
-                kill_bullet(bullet)
-                kill_enemy(enemy)
+                bullet.die()
+                enemy.die()
 
         a = player.xcor() - enemy.xcor()
         b = player.ycor() - enemy.ycor()
