@@ -116,14 +116,13 @@ def create_player():
 
 
 def bullet_advance():
-    if len(bullet_list) > 0:
-        for bullet in bullet_list:
-            bullet.forward(10)
+    for bullet in bullet_list:
+        bullet.forward(10)
 
-            if bullet.ycor() > 300:
-                bullet.clear()
-                bullet.hideturtle()
-                bullet_list.remove(bullet)
+        if bullet.ycor() > 300:
+            bullet.clear()
+            bullet.hideturtle()
+            bullet_list.remove(bullet)
 
 
 bullet_list = []
