@@ -17,26 +17,35 @@ class Player(turtle.Turtle):
         self.x_speed = 0
         self.bullet_delay = 0
         self.lives = True
+        self.stabalize_delay = 15
 
     # move forward
     def increase_y_speed(self):
-        if self.y_speed < 4.5:
-            self.y_speed += 1.5
+        if self.y_speed < 4:
+            self.y_speed += 1.0
+
+        self.stabalize_delay = 15
 
     # move back
     def decrease_y_speed(self):
-        if self.y_speed > -4.5:
-            self.y_speed -= 1.5
+        if self.y_speed > -4:
+            self.y_speed -= 1.0
+
+        self.stabalize_delay = 15
 
     # move right
     def increase_x_speed(self):
-        if self.x_speed < 4.5:
-            self.x_speed += 1.5
+        if self.x_speed < 4:
+            self.x_speed += 1.0
+
+        self.stabalize_delay = 15
 
     # move left
     def decrease_x_speed(self):
-        if self.x_speed > -4.5:
-            self.x_speed -= 1.5
+        if self.x_speed > -4:
+            self.x_speed -= 1.0
+
+        self.stabalize_delay = 15
 
     # constant flight
     def constant_flight(self):
@@ -48,6 +57,31 @@ class Player(turtle.Turtle):
 
         if abs(self.ycor()) > 300:
             self.setposition(self.xcor(), (self.ycor() - self.y_speed))
+
+    # gradually settles ship if player is not changing direction
+    def stabalize(self):
+        if self.x_speed >= 0.1 and self.stabalize_delay == 0:
+            self.x_speed = self.x_speed - 0.1
+        elif 0 < self.x_speed < 0.2:
+            self.x_speed = 0
+
+        if self.x_speed <= -0.1 and self.stabalize_delay == 0:
+            self.x_speed = self.x_speed + 0.1
+        elif 0 > self.x_speed > -0.2:
+            self.x_speed = 0
+
+        if self.y_speed >= 0.1 and self.stabalize_delay == 0:
+            self.y_speed = self.y_speed - 0.1
+        elif 0 < self.y_speed < 0.2:
+            self.y_speed = 0
+
+        if self.y_speed <= -0.1 and self.stabalize_delay == 0:
+            self.y_speed = self.y_speed + 0.1
+        elif 0 > self.y_speed > -0.2:
+            self.y_speed = 0
+
+        if self.stabalize_delay > 0:
+            self.stabalize_delay -= 1
 
     def shoot(self):
         if self.bullet_delay <= 0:
@@ -225,6 +259,8 @@ def main():
         bullet_advance()
 
         enemy_advance()
+
+        player.stabalize()
 
     window.bgcolor("red")
 
