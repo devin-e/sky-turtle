@@ -87,7 +87,7 @@ class Player(turtle.Turtle):
         if self.bullet_delay <= 0:
             bullet = Bullet()
             bullet.setposition(self.xcor(), self.ycor())
-            bullet.forward(25)
+            bullet.forward(15)
             bullet.showturtle()
             bullet_list.append(bullet)
             self.bullet_delay = 10
@@ -110,7 +110,27 @@ class Enemy(turtle.Turtle):
         self.color("yellow")
         self.shape("square")
         self.setheading(270)
-        self.move_speed = 5
+        self.move_speed = 2
+        self.bullet_delay = 60
+
+    def shoot(self):
+        if self.bullet_delay <= 0:
+            enemy_bullet = Enemy_Bullet()
+            enemy_bullet.setposition(self.xcor(), self.ycor())
+            if self.xcor() > 100:
+                enemy_bullet.setheading(250)
+            elif self.xcor() < -100:
+                enemy_bullet.setheading(290)
+            else:
+                enemy_bullet.setheading(270)
+            enemy_bullet.forward(15)
+            enemy_bullet.showturtle()
+            enemy_bullet_list.append(enemy_bullet)
+            self.bullet_delay = 90
+
+    def reload_bullet(self):
+        if self.bullet_delay > 0:
+            self.bullet_delay -= 1
 
     def die(self):
         self.clear()
@@ -154,6 +174,24 @@ class Bullet(turtle.Turtle):
         bullet_list.remove(self)
 
 
+class Enemy_Bullet(turtle.Turtle):
+
+    def __init__(self):
+        turtle.Turtle.__init__(self)
+        self.hideturtle()
+        self.penup()
+        self.shape("circle")
+        self.color("yellow")
+        self.shapesize(0.75, 0.75)
+        self.speed(0)
+        self.move_speed = 4
+
+    def die(self):
+        self.clear()
+        self.hideturtle()
+        enemy_bullet_list.remove(self)
+
+
 def new_game():
     turtle.resetscreen()
     turtle.clearscreen()
@@ -189,6 +227,14 @@ def bullet_advance():
 
         if bullet.ycor() > 300:
             bullet.die()
+
+
+def enemy_bullet_advance():
+    for enemy_bullet in enemy_bullet_list:
+        enemy_bullet.forward(5)
+
+        if enemy_bullet.ycor() < -300:
+            enemy_bullet.die()
 
 
 def spawn_enemy():
@@ -229,10 +275,26 @@ def detect_collision(player):
         if distance < 20:
             player.die()
 
+    for enemy_bullet in enemy_bullet_list:
+        a = player.xcor() - enemy_bullet.xcor()
+        b = player.ycor() - enemy_bullet.ycor()
+        distance = math.hypot(a, b)
+
+        if distance < 20:
+            player.die()
+
+
+def enemy_autofire():
+    for enemy in enemy_list:
+        enemy.shoot()
+        enemy.reload_bullet()
+
 
 bullet_list = []
+enemy_bullet_list = []
 enemy_list = []
 enemy_spawn_delay = 0
+
 
 def main():
 
@@ -259,6 +321,8 @@ def main():
         bullet_advance()
 
         enemy_advance()
+        enemy_autofire()
+        enemy_bullet_advance()
 
         player.stabalize()
 
