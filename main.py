@@ -92,7 +92,7 @@ class Player(turtle.Turtle):
             bullet_list.append(bullet)
             self.bullet_delay = 10
 
-    def reload(self):
+    def reload_bullet(self):
         if self.bullet_delay > 0:
             self.bullet_delay -= 1
 
@@ -252,7 +252,7 @@ def main():
         window.update()
 
         player.constant_flight()
-        player.reload()
+        player.reload_bullet()
 
         spawn_enemy()
         detect_collision(player)
