@@ -6,7 +6,7 @@ import math
 
 class Player(turtle.Turtle):
 
-    def __init__(self, bullet_handler):
+    def __init__(self, bullet_handler, stabalize_delay):
         turtle.Turtle.__init__(self)
         self.penup()
         self.speed(0)
@@ -86,7 +86,7 @@ class Player(turtle.Turtle):
 
     def shoot(self):
         if self.bullet_delay <= 0:
-            self.bullet_handler.create_bullet(self.xcor(), self.ycor())
+            self.bullet_handler.create_bullet(self.xcor(), self.ycor(), move_speed = 10, is_enemy=False)
             self.bullet_delay = 10
 
     def reload_bullet(self):
@@ -103,49 +103,31 @@ class Bullet_Handler():
         self.bullet_list = []
         self.enemy_bullet_list = []
 
-    def create_bullet(self, x_origin, y_origin):
-        bullet = Bullet()
+    def create_bullet(self, x_origin, y_origin, move_speed, is_enemy):
+        bullet = Bullet(move_speed, is_enemy)
         bullet.setposition(x_origin, y_origin)
+        bullet.aim(x_origin, y_origin)
         bullet.forward(15)
         bullet.showturtle()
-        self.bullet_list.append(bullet)
+        if is_enemy:
+            self.enemy_bullet_list.append(bullet)
+        else:
+            self.bullet_list.append(bullet)
 
-    def advance_bullet(self):
-        for bullet in self.bullet_list:
-            bullet.forward(10)
+    def advance_bullet(self, bullet_list):
+        for bullet in bullet_list:
+            bullet.forward(bullet.move_speed)
 
-            if bullet.ycor() > 300:
+            if abs(bullet.ycor()) > 300:
                 self.remove_bullet(bullet)
 
     def remove_bullet(self, bullet):
         bullet.clear()
         bullet.hideturtle()
-        self.bullet_list.remove(bullet)
-
-    def create_enemy_bullet(self, x_origin, y_origin):
-        enemy_bullet = Enemy_Bullet()
-        enemy_bullet.setposition(x_origin, y_origin)
-        if x_origin > 100:
-            enemy_bullet.setheading(250)
-        elif x_origin < -100:
-            enemy_bullet.setheading(290)
+        if bullet.is_enemy:
+            self.enemy_bullet_list.remove(bullet)
         else:
-            enemy_bullet.setheading(270)
-        enemy_bullet.forward(15)
-        enemy_bullet.showturtle()
-        self.enemy_bullet_list.append(enemy_bullet)
-
-    def enemy_bullet_advance(self):
-        for enemy_bullet in self.enemy_bullet_list:
-            enemy_bullet.forward(5)
-
-            if enemy_bullet.ycor() < -300:
-                self.remove_enemy_bullet(enemy_bullet)
-
-    def remove_enemy_bullet(self, enemy_bullet):
-        enemy_bullet.clear()
-        enemy_bullet.hideturtle()
-        self.enemy_bullet_list.remove(enemy_bullet)
+            self.bullet_list.remove(bullet)
 
 
 class Enemy(turtle.Turtle):
@@ -164,7 +146,7 @@ class Enemy(turtle.Turtle):
 
     def shoot(self, bullet_handler):
         if self.bullet_delay <= 0:
-            bullet_handler.create_enemy_bullet(self.xcor(), self.ycor())
+            bullet_handler.create_bullet(self.xcor(), self.ycor(), move_speed=5, is_enemy=True)
             self.bullet_delay = 90
 
     def reload_bullet(self):
@@ -225,28 +207,32 @@ class Enemy_Handler():
 
 class Bullet(turtle.Turtle):
 
-    def __init__(self):
+    def __init__(self, move_speed, is_enemy):
         turtle.Turtle.__init__(self)
         self.hideturtle()
         self.penup()
-        self.shape("classic")
-        self.color("red")
-        self.shapesize(0.75, 0.75)
-        self.setheading(90)
-        self.speed(0)
-
-
-class Enemy_Bullet(turtle.Turtle):
-
-    def __init__(self):
-        turtle.Turtle.__init__(self)
-        self.hideturtle()
-        self.penup()
-        self.shape("circle")
-        self.color("yellow")
+        self.move_speed = move_speed
         self.shapesize(0.75, 0.75)
         self.speed(0)
-        self.move_speed = 4
+        self.is_enemy = is_enemy
+        if self.is_enemy:
+            self.shape("circle")
+            self.color("yellow")
+        else:
+            self.shape("classic")
+            self.color("red")
+
+    def aim(self, x_origin, y_origin):
+        if self.is_enemy:
+            if x_origin > 100:
+                self.setheading(250)
+            elif x_origin < -100:
+                self.setheading(290)
+            else:
+                self.setheading(270)
+
+        else:
+            self.setheading(90)
 
     def die(self):
         self.clear()
@@ -269,8 +255,8 @@ def draw_screen():
     return window
 
 
-def create_player(bullet_handler):
-    player = Player(bullet_handler)
+def create_player(bullet_handler, stabalize_delay):
+    player = Player(bullet_handler, stabalize_delay)
 
     turtle.listen()
     turtle.onkey(player.increase_y_speed, "w")
@@ -298,7 +284,7 @@ def detect_collision(player, bullet_handler, enemy_handler):
         b = player.ycor() - enemy.ycor()
         distance = math.hypot(a, b)
 
-        if distance < 20:
+        if distance < 18:
             player.die()
 
     for enemy_bullet in bullet_handler.enemy_bullet_list:
@@ -306,7 +292,7 @@ def detect_collision(player, bullet_handler, enemy_handler):
         b = player.ycor() - enemy_bullet.ycor()
         distance = math.hypot(a, b)
 
-        if distance < 20:
+        if distance < 12:
             player.die()
 
 
@@ -322,7 +308,7 @@ def main():
     border.draw_border()
 
     bullet_handler = Bullet_Handler()
-    player = create_player(bullet_handler)
+    player = create_player(bullet_handler, stabalize_delay=15)
 
     enemy_handler = Enemy_Handler()
 
@@ -335,11 +321,11 @@ def main():
 
         enemy_handler.spawn_enemy()
         detect_collision(player, bullet_handler, enemy_handler)
-        bullet_handler.advance_bullet()
+        bullet_handler.advance_bullet(bullet_handler.bullet_list)
 
         enemy_handler.enemy_advance()
         enemy_handler.enemy_autofire(bullet_handler)
-        bullet_handler.enemy_bullet_advance()
+        bullet_handler.advance_bullet(bullet_handler.enemy_bullet_list)
 
         player.stabalize()
 
