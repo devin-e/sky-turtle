@@ -86,7 +86,8 @@ class Player(turtle.Turtle):
 
     def shoot(self):
         if self.bullet_delay <= 0:
-            self.bullet_handler.create_bullet(self.xcor(), self.ycor(), move_speed = 10, is_enemy=False)
+            self.bullet_handler.create_bullet(self.xcor(), self.ycor(),
+                                              move_speed = 10, is_enemy = False)
             self.bullet_delay = 10
 
     def reload_bullet(self):
@@ -101,7 +102,6 @@ class Bullet_Handler():
 
     def __init__(self):
         self.bullet_list = []
-        self.enemy_bullet_list = []
 
     def create_bullet(self, x_origin, y_origin, move_speed, is_enemy):
         bullet = Bullet(move_speed, is_enemy)
@@ -109,13 +109,10 @@ class Bullet_Handler():
         bullet.aim(x_origin, y_origin)
         bullet.forward(15)
         bullet.showturtle()
-        if is_enemy:
-            self.enemy_bullet_list.append(bullet)
-        else:
-            self.bullet_list.append(bullet)
+        self.bullet_list.append(bullet)
 
-    def advance_bullet(self, bullet_list):
-        for bullet in bullet_list:
+    def advance_bullet(self):
+        for bullet in self.bullet_list:
             bullet.forward(bullet.move_speed)
 
             if abs(bullet.ycor()) > 300:
@@ -124,15 +121,13 @@ class Bullet_Handler():
     def remove_bullet(self, bullet):
         bullet.clear()
         bullet.hideturtle()
-        if bullet.is_enemy:
-            self.enemy_bullet_list.remove(bullet)
-        else:
-            self.bullet_list.remove(bullet)
+        self.bullet_list.remove(bullet)
+
 
 
 class Enemy(turtle.Turtle):
 
-    def __init__(self, enemy_handler):
+    def __init__(self, enemy_handler, bullet_handler):
         turtle.Turtle.__init__(self)
         self.penup()
         self.hideturtle()
@@ -143,10 +138,12 @@ class Enemy(turtle.Turtle):
         self.move_speed = 2
         self.bullet_delay = 60
         self.enemy_handler = enemy_handler
+        self.bullet_handler = bullet_handler
 
-    def shoot(self, bullet_handler):
+    def shoot(self):
         if self.bullet_delay <= 0:
-            bullet_handler.create_bullet(self.xcor(), self.ycor(), move_speed=5, is_enemy=True)
+            self.bullet_handler.create_bullet(self.xcor(), self.ycor(),
+                                              move_speed = 5, is_enemy = True)
             self.bullet_delay = 90
 
     def reload_bullet(self):
@@ -178,10 +175,10 @@ class Enemy_Handler():
         self.enemy_list = []
         self.enemy_spawn_delay = 0
 
-    def spawn_enemy(self):
+    def spawn_enemy(self, bullet_handler):
         self.enemy_spawn_delay += 1
         if self.enemy_spawn_delay > 180:
-            enemy = Enemy(self)
+            enemy = Enemy(self, bullet_handler)
             enemy.setposition(random.randint(-280, 280), 300)
             enemy.showturtle()
             self.enemy_list.append(enemy)
@@ -199,9 +196,9 @@ class Enemy_Handler():
         enemy.hideturtle()
         self.enemy_list.remove(enemy)
 
-    def enemy_autofire(self, bullet_handler):
+    def enemy_autofire(self):
         for enemy in self.enemy_list:
-            enemy.shoot(bullet_handler)
+            enemy.shoot()
             enemy.reload_bullet()
 
 
@@ -259,17 +256,26 @@ def create_player(bullet_handler, stabalize_delay):
     player = Player(bullet_handler, stabalize_delay)
 
     turtle.listen()
+    turtle.onkeypress(player.increase_y_speed, "w")
+    turtle.onkeypress(player.increase_x_speed, "d")
+    turtle.onkeypress(player.decrease_x_speed, "a")
+    turtle.onkeypress(player.decrease_y_speed, "s")
+
     turtle.onkey(player.increase_y_speed, "w")
     turtle.onkey(player.increase_x_speed, "d")
     turtle.onkey(player.decrease_x_speed, "a")
     turtle.onkey(player.decrease_y_speed, "s")
+
     turtle.onkey(player.die, "p")
+
+    turtle.onkeypress(player.shoot, "u")
     turtle.onkey(player.shoot, "u")
 
     return player
 
 
-def detect_collision(player, bullet_handler, enemy_handler):
+def detect_collision(player, bullet_handler, enemy_handler,
+                     enemy_bullet_handler):
     for enemy in enemy_handler.enemy_list:
         for bullet in bullet_handler.bullet_list:
             a = bullet.xcor() - enemy.xcor()
@@ -287,7 +293,7 @@ def detect_collision(player, bullet_handler, enemy_handler):
         if distance < 18:
             player.die()
 
-    for enemy_bullet in bullet_handler.enemy_bullet_list:
+    for enemy_bullet in enemy_bullet_handler.bullet_list:
         a = player.xcor() - enemy_bullet.xcor()
         b = player.ycor() - enemy_bullet.ycor()
         distance = math.hypot(a, b)
@@ -308,9 +314,10 @@ def main():
     border.draw_border()
 
     bullet_handler = Bullet_Handler()
-    player = create_player(bullet_handler, stabalize_delay=15)
+    player = create_player(bullet_handler, stabalize_delay = 15)
 
     enemy_handler = Enemy_Handler()
+    enemy_bullet_handler = Bullet_Handler()
 
     while player.lives:
         time.sleep(time_delta)
@@ -319,13 +326,13 @@ def main():
         player.constant_flight()
         player.reload_bullet()
 
-        enemy_handler.spawn_enemy()
-        detect_collision(player, bullet_handler, enemy_handler)
-        bullet_handler.advance_bullet(bullet_handler.bullet_list)
+        enemy_handler.spawn_enemy(enemy_bullet_handler)
+        detect_collision(player, bullet_handler, enemy_handler, enemy_bullet_handler)
+        bullet_handler.advance_bullet()
 
         enemy_handler.enemy_advance()
-        enemy_handler.enemy_autofire(bullet_handler)
-        bullet_handler.advance_bullet(bullet_handler.enemy_bullet_list)
+        enemy_handler.enemy_autofire()
+        enemy_bullet_handler.advance_bullet()
 
         player.stabalize()
 
