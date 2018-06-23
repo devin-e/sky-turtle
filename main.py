@@ -258,76 +258,141 @@ class Bullet(turtle.Turtle):
             self.color("red")
 
 
-def new_game():
-    turtle.resetscreen()
-    turtle.clearscreen()
+class Wall_Section(turtle.Turtle):
+
+    def __init__(self, shape, position):
+        turtle.Turtle.__init__(self)
+        self.hideturtle()
+        self.penup()
+        self.shape(shape)
+        self.color("white")
+        self.setheading(90)
+        self.setposition(position)
+        self.showturtle()
 
 
-def draw_screen():
-    window = turtle.Screen()
-    window.bgcolor("black")
-    window.setup(700, 700)
-    window.title("Sky Turtle")
-    window.tracer(0, 0)
+# Move this class to a separate module to avoid cluttering main. Initialize with all level blueprints. Pass blueprints to game object as levels are moved through.
+class Blueprint_Manager():
 
-    return window
+    def __init__(self):
+        self.level_one_blueprint = [["vertical_wall", (-200, -200)], ["right_lean_wall", (-200, -100)]]
 
 
-def create_player(bullet_handler, stabalize_delay):
-    player = Player(bullet_handler, stabalize_delay)
+class Game():
 
-    turtle.listen()
-    turtle.onkeypress(player.increase_y_speed, "w")
-    turtle.onkeypress(player.increase_x_speed, "d")
-    turtle.onkeypress(player.decrease_x_speed, "a")
-    turtle.onkeypress(player.decrease_y_speed, "s")
+    def __init__(self):
+        self.window = turtle.Screen()
+        self.scroll_speed = 1
+        self.wall_list = []
 
-    turtle.onkey(player.increase_y_speed, "w")
-    turtle.onkey(player.increase_x_speed, "d")
-    turtle.onkey(player.decrease_x_speed, "a")
-    turtle.onkey(player.decrease_y_speed, "s")
+        # going to need a left blueprint and right blueprint
+        # move this list to blueprint manager and pass to Game init method
+        self.blueprint = [["vertical_wall", (-200, -200)], ["right_lean_wall", (-200, -100)], ["vertical_wall", (-125, 0)], ["left_lean_wall", (-125, 100)], ["vertical_wall", (-200, 200)], ["right_lean_wall", (-200, 300)], ["vertical_wall", (-125, 400)], ["left_lean_wall", (-125, 500)], ["vertical_wall", (-200, 400)], ["right_lean_wall", (-200, 400)], ["vertical_wall", (-125, 400)], ["left_lean_wall", (-125, 400)], ["vertical_wall", (-200, 400)], ["right_lean_wall", (-200, 400)], ["vertical_wall", (-125, 400)], ["left_lean_wall", (-125, 400)],]
 
-    turtle.onkey(player.die, "p")
+    def draw_screen(self):
+        self.window.bgcolor("black")
+        self.window.setup(700, 700)
+        self.window.title("Sky Turtle")
+        self.window.tracer(0)
 
-    turtle.onkeypress(player.shoot, "u")
-    turtle.onkey(player.shoot, "u")
+        # border pieces
+        self.window.register_shape("vertical_wall", ((0, 0), (5, 0), (5, 100), (0, 100)))
+        self.window.register_shape("right_lean_wall", ((0, 0), (5, 0), (80, 100), (75, 100)))
+        self.window.register_shape("left_lean_wall", ((5, 0), (0, 0), (-75, 100), (-70, 100)))
 
-    return player
+    # set up first eight pieces
+    def build_map(self):
+        for pair in self.blueprint[:8]:
+            shape = pair[0]
+            position = pair[1]
+            wall_section = Wall_Section(shape, position)
+            self.wall_list.append(wall_section)
+        for _ in range(8):
+            del self.blueprint[0]
 
 
-def detect_collision(player, bullet_handler, enemy_handler,
-                     enemy_bullet_handler):
-    for enemy in enemy_handler.enemy_list:
-        for bullet in bullet_handler.bullet_list:
-            a = bullet.xcor() - enemy.xcor()
-            b = bullet.ycor() - enemy.ycor()
+    def scroll_map(self):
+        for wall in self.wall_list:
+            wall.setposition(wall.xcor(), wall.ycor() - self.scroll_speed)
+            if wall.ycor() < -400:
+                self.wall_list.remove(wall)
+
+
+        if len(self.wall_list) < 8 and len(self.blueprint) > 0:
+            pair = self.blueprint[0]
+            shape = pair[0]
+            position = pair[1]
+            wall_section = Wall_Section(shape, position)
+            self.wall_list.append(wall_section)
+            self.blueprint.remove(pair)
+
+    # build spinning obstacles later
+    # def spin_walls(self):
+    #     for wall in self.wall_list:
+    #         wall.setheading(wall.heading() + 1)
+
+    def new_game(self):
+        turtle.resetscreen()
+        turtle.clearscreen()
+
+
+    def create_player(self, bullet_handler, stabalize_delay):
+        player = Player(bullet_handler, stabalize_delay)
+
+        turtle.listen()
+        turtle.onkeypress(player.increase_y_speed, "w")
+        turtle.onkeypress(player.increase_x_speed, "d")
+        turtle.onkeypress(player.decrease_x_speed, "a")
+        turtle.onkeypress(player.decrease_y_speed, "s")
+
+        turtle.onkey(player.increase_y_speed, "w")
+        turtle.onkey(player.increase_x_speed, "d")
+        turtle.onkey(player.decrease_x_speed, "a")
+        turtle.onkey(player.decrease_y_speed, "s")
+
+        turtle.onkey(player.die, "p")
+
+        turtle.onkeypress(player.shoot, "u")
+        turtle.onkey(player.shoot, "u")
+
+        return player
+
+
+    def detect_collision(self, player, bullet_handler, enemy_handler,
+                        enemy_bullet_handler):
+        for enemy in enemy_handler.enemy_list:
+            for bullet in bullet_handler.bullet_list:
+                a = bullet.xcor() - enemy.xcor()
+                b = bullet.ycor() - enemy.ycor()
+                distance = math.hypot(a, b)
+
+                if distance < 20:
+                    bullet_handler.remove_bullet(bullet)
+                    enemy_handler.remove_enemy(enemy)
+
+            a = player.xcor() - enemy.xcor()
+            b = player.ycor() - enemy.ycor()
             distance = math.hypot(a, b)
 
-            if distance < 20:
-                bullet_handler.remove_bullet(bullet)
-                enemy_handler.remove_enemy(enemy)
+            if distance < 18:
+                player.die()
 
-        a = player.xcor() - enemy.xcor()
-        b = player.ycor() - enemy.ycor()
-        distance = math.hypot(a, b)
+        for enemy_bullet in enemy_bullet_handler.bullet_list:
+            a = player.xcor() - enemy_bullet.xcor()
+            b = player.ycor() - enemy_bullet.ycor()
+            distance = math.hypot(a, b)
 
-        if distance < 18:
-            player.die()
-
-    for enemy_bullet in enemy_bullet_handler.bullet_list:
-        a = player.xcor() - enemy_bullet.xcor()
-        b = player.ycor() - enemy_bullet.ycor()
-        distance = math.hypot(a, b)
-
-        if distance < 12:
-            player.die()
+            if distance < 12:
+                player.die()
 
 
 def main():
 
-    new_game()
+    game = Game()
+    game.new_game()
 
-    window = draw_screen()
+    game.draw_screen()
+    game.build_map()
     fps = 60
     time_delta = 1.0/fps
 
@@ -335,21 +400,23 @@ def main():
     border.draw_border()
 
     bullet_handler = Bullet_Handler()
-    player = create_player(bullet_handler, stabalize_delay = 15)
+    player = game.create_player(bullet_handler, stabalize_delay = 15)
 
     enemy_handler = Enemy_Handler()
     enemy_bullet_handler = Bullet_Handler()
 
     while player.lives:
         time.sleep(time_delta)
-        window.update()
+        game.window.update()
+
+        game.scroll_map()
 
         player.constant_flight()
         player.reload_bullet()
 
         enemy_handler.spawn_smart_enemy(enemy_bullet_handler, player)
         enemy_handler.spawn_enemy(enemy_bullet_handler)
-        detect_collision(player, bullet_handler, enemy_handler, enemy_bullet_handler)
+        game.detect_collision(player, bullet_handler, enemy_handler, enemy_bullet_handler)
         bullet_handler.advance_bullet()
 
         enemy_handler.enemy_advance()
@@ -358,7 +425,7 @@ def main():
 
         player.stabalize()
 
-    window.bgcolor("red")
+    game.window.bgcolor("red")
 
 
 if __name__ == '__main__':
