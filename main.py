@@ -86,8 +86,12 @@ class Player(turtle.Turtle):
 
     def shoot(self):
         if self.bullet_delay <= 0:
-            self.bullet_handler.create_bullet(self.xcor(), self.ycor(),
-                                              move_speed = 10, is_enemy = False)
+            bullet = Bullet(move_speed = 10, is_enemy = False)
+            bullet.setposition(self.xcor(), self.ycor())
+            bullet.setheading(90)
+            bullet.forward(15)
+            bullet.showturtle()
+            self.bullet_handler.bullet_list.append(bullet)
             self.bullet_delay = 10
 
     def reload_bullet(self):
@@ -102,14 +106,6 @@ class Bullet_Handler():
 
     def __init__(self):
         self.bullet_list = []
-
-    def create_bullet(self, x_origin, y_origin, move_speed, is_enemy):
-        bullet = Bullet(move_speed, is_enemy)
-        bullet.setposition(x_origin, y_origin)
-        bullet.aim(x_origin, y_origin)
-        bullet.forward(15)
-        bullet.showturtle()
-        self.bullet_list.append(bullet)
 
     def advance_bullet(self):
         for bullet in self.bullet_list:
@@ -142,13 +138,45 @@ class Enemy(turtle.Turtle):
 
     def shoot(self):
         if self.bullet_delay <= 0:
-            self.bullet_handler.create_bullet(self.xcor(), self.ycor(),
-                                              move_speed = 5, is_enemy = True)
+            bullet = Bullet(move_speed = 5, is_enemy = True)
+            bullet.setposition(self.xcor(), self.ycor())
+
+            if self.xcor() > 100:
+                bullet.setheading(250)
+            elif self.xcor() < -100:
+                bullet.setheading(290)
+            else:
+                bullet.setheading(270)
+
+            bullet.forward(15)
+            bullet.showturtle()
+            self.bullet_handler.bullet_list.append(bullet)
             self.bullet_delay = 90
 
     def reload_bullet(self):
         if self.bullet_delay > 0:
             self.bullet_delay -= 1
+
+
+class Smart_Enemy(Enemy):
+
+    def __init__(self, enemy_handler, bullet_handler, target):
+        super().__init__(enemy_handler, bullet_handler)
+        self.target = target
+        self.color("blue")
+
+    def shoot(self):
+        if self.bullet_delay <= 0 and self.ycor() > self.target.ycor():
+            bullet = Bullet(move_speed = 5, is_enemy = True)
+            bullet.setposition(self.xcor(), self.ycor())
+            opposite = bullet.xcor() - self.target.xcor()
+            adjacent = bullet.ycor() - self.target.ycor()
+            angle = math.degrees(math.atan(opposite/adjacent))
+            bullet.setheading(270 - angle)
+            bullet.forward(15)
+            bullet.showturtle()
+            self.bullet_handler.bullet_list.append(bullet)
+            self.bullet_delay = 90
 
 
 class Border(turtle.Turtle):
@@ -173,16 +201,26 @@ class Enemy_Handler():
 
     def __init__(self):
         self.enemy_list = []
-        self.enemy_spawn_delay = 0
+        self.enemy_spawn_delay = 180
+        self.enemies_spawned_count = 0
 
     def spawn_enemy(self, bullet_handler):
-        self.enemy_spawn_delay += 1
-        if self.enemy_spawn_delay > 180:
+        self.enemy_spawn_delay -= 1
+        if self.enemy_spawn_delay <= 0:
             enemy = Enemy(self, bullet_handler)
             enemy.setposition(random.randint(-280, 280), 300)
             enemy.showturtle()
             self.enemy_list.append(enemy)
-            self.enemy_spawn_delay = 0
+            self.enemy_spawn_delay = 180
+            self.enemies_spawned_count += 1
+
+    def spawn_smart_enemy(self, bullet_handler, target):
+        if self.enemies_spawned_count > 0 and self.enemies_spawned_count % 5 == 0:
+            enemy = Smart_Enemy(self, bullet_handler, target)
+            enemy.setposition(random.randint(-280, 280), 300)
+            enemy.showturtle()
+            self.enemy_list.append(enemy)
+            self.enemies_spawned_count += 1
 
     def enemy_advance(self):
         for enemy in self.enemy_list:
@@ -218,23 +256,6 @@ class Bullet(turtle.Turtle):
         else:
             self.shape("classic")
             self.color("red")
-
-    def aim(self, x_origin, y_origin):
-        if self.is_enemy:
-            if x_origin > 100:
-                self.setheading(250)
-            elif x_origin < -100:
-                self.setheading(290)
-            else:
-                self.setheading(270)
-
-        else:
-            self.setheading(90)
-
-    def die(self):
-        self.clear()
-        self.hideturtle()
-        enemy_bullet_list.remove(self)
 
 
 def new_game():
@@ -326,6 +347,7 @@ def main():
         player.constant_flight()
         player.reload_bullet()
 
+        enemy_handler.spawn_smart_enemy(enemy_bullet_handler, player)
         enemy_handler.spawn_enemy(enemy_bullet_handler)
         detect_collision(player, bullet_handler, enemy_handler, enemy_bullet_handler)
         bullet_handler.advance_bullet()
