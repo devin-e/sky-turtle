@@ -287,36 +287,20 @@ class Wall_Section(turtle.Turtle):
             self.slope = None
 
 
-# Move this class to a separate module to avoid cluttering main. Initialize with all level blueprints. Pass blueprints to game object as levels are moved through.
-# class Blueprint_Manager():
-
-#     def __init__(self):
-#         self.level_one_blueprint = [["vertical_wall", (-200, -200)], ["right_lean_wall", (-200, -100)]]
-
-
-
-
 class Game():
 
     def __init__(self):
         self.window = turtle.Screen()
         self.scroll_speed = 1
-        self.wall_list = []
-
-        self.blueprint_manager = Blueprint_Manager()
-        # going to need a left blueprint and right blueprint
-        # move this list to blueprint manager and pass to Game init method
-
-        # consider making a master blueprint in the blueprint manager that is built by alternatig between left blueprint and right blueprint. so it's already organized to build both sides together. Edit left border test method to check left and right border.
-        self.blueprint = self.blueprint_manager.right_wall_blueprint
+        self.right_wall_list = []
+        self.left_wall_list = []
+        self.main_wall_list = []
 
     def draw_screen(self):
         self.window.bgcolor("black")
         self.window.setup(700, 700)
         self.window.title("Sky Turtle")
         self.window.tracer(0)
-
-        print(self.blueprint)
 
         # border pieces
         self.window.register_shape("vertical_wall", ((0, 0), (5, 0), (5, 100), (0, 100)))
@@ -325,8 +309,8 @@ class Game():
 
     # clean this.
     def right_border_test(self, player):
-        for wall in self.wall_list:
-            if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and abs(player.xcor() - wall.xcor() < 80):
+        for wall in self.right_wall_list:
+            if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and abs(wall.xcor() - player.xcor() < 80):
                 wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
                 player_offset = (wall.slope * player.xcor() - player.ycor())
 
@@ -350,7 +334,7 @@ class Game():
 
     # left wall only
     def left_border_test(self, player):
-        for wall in self.wall_list:
+        for wall in self.left_wall_list:
             if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and (player.xcor() - wall.xcor() < 80):
                 wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
                 player_offset = (wall.slope * player.xcor() - player.ycor())
@@ -374,30 +358,29 @@ class Game():
                     player.bounce(0, None)
 
     # set up first eight pieces
-    def build_map(self):
-        for pair in self.blueprint[:8]:
-            shape = pair[0]
-            position = pair[1]
+    def build_map(self, blueprint, wall_list):
+        for template in blueprint[:8]:
+            shape = template[0]
+            position = template[1]
             wall_section = Wall_Section(shape, position)
-            self.wall_list.append(wall_section)
+            wall_list.append(wall_section)
         for _ in range(8):
-            del self.blueprint[0]
+            del blueprint[0]
 
-
-    def scroll_map(self):
-        for wall in self.wall_list:
+    def scroll_map(self, blueprint, wall_list):
+        for wall in wall_list:
             wall.setposition(wall.xcor(), wall.ycor() - self.scroll_speed)
             if wall.ycor() < -400:
-                self.wall_list.remove(wall)
+                wall_list.remove(wall)
 
 
-        if len(self.wall_list) < 8 and len(self.blueprint) > 0:
-            pair = self.blueprint[0]
-            shape = pair[0]
-            position = pair[1]
+        if len(wall_list) < 8 and len(blueprint) > 0:
+            template = blueprint[0]
+            shape = template[0]
+            position = template[1]
             wall_section = Wall_Section(shape, position)
-            self.wall_list.append(wall_section)
-            self.blueprint.remove(pair)
+            wall_list.append(wall_section)
+            blueprint.remove(template)
 
     # build spinning obstacles later
     # def spin_walls(self):
@@ -462,10 +445,14 @@ class Game():
 def main():
 
     game = Game()
+    blueprint_manager = Blueprint_Manager()
+
     game.new_game()
 
     game.draw_screen()
-    game.build_map()
+    game.build_map(blueprint_manager.right_wall_blueprint, game.right_wall_list)
+    game.build_map(blueprint_manager.left_wall_blueprint, game.left_wall_list)
+
     fps = 60
     time_delta = 1.0/fps
 
@@ -482,7 +469,9 @@ def main():
         time.sleep(time_delta)
         game.window.update()
 
-        game.scroll_map()
+        game.scroll_map(blueprint_manager.right_wall_blueprint, game.right_wall_list)
+
+        game.scroll_map(blueprint_manager.left_wall_blueprint, game.left_wall_list)
 
         player.constant_flight()
         player.reload_bullet()
@@ -498,7 +487,7 @@ def main():
 
         if player.xcor() < 0:
             game.left_border_test(player)
-        elif player.xcor() > 0:
+        if player.xcor() > 0:
             game.right_border_test(player)
 
         player.stabalize()
