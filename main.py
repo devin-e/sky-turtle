@@ -19,6 +19,10 @@ class Player(turtle.Turtle):
         self.lives = True
         self.stabalize_delay = 15
         self.bullet_handler = bullet_handler
+        self.bounce_up_angle = False
+        self.bounce_down_angle = False
+        self.bounce_horizontal = False
+        self.recoil_time = 0
 
     # move forward
     def increase_y_speed(self):
@@ -52,6 +56,20 @@ class Player(turtle.Turtle):
     def constant_flight(self):
         self.setposition((self.xcor() + self.x_speed),
                         (self.ycor() + self.y_speed))
+
+        if self.bounce_up_angle == True:
+            self.x_speed = 1
+            self.y_speed = 1
+            self.bounce_up_angle = False
+
+        if self.bounce_down_angle == True:
+            self.x_speed = 1
+            self.y_speed = -1
+            self.bounce_down_angle = False
+
+        if self.bounce_horizontal == True:
+            self.x_speed = 2
+            self.bounce_horizontal = False
 
         if abs(self.xcor()) > 300:
             self.setposition((self.xcor() - self.x_speed), self.ycor())
@@ -269,6 +287,14 @@ class Wall_Section(turtle.Turtle):
         self.setheading(90)
         self.setposition(position)
         self.showturtle()
+        self.shape = shape
+
+        if self.shape == "right_lean_wall":
+            self.slope = 4/3
+        elif self.shape == "left_lean_wall":
+            self.slope = -4/3
+        else:
+            self.slope = None
 
 
 # Move this class to a separate module to avoid cluttering main. Initialize with all level blueprints. Pass blueprints to game object as levels are moved through.
@@ -287,7 +313,7 @@ class Game():
 
         # going to need a left blueprint and right blueprint
         # move this list to blueprint manager and pass to Game init method
-        self.blueprint = [["vertical_wall", (-200, -200)], ["right_lean_wall", (-200, -100)], ["vertical_wall", (-125, 0)], ["left_lean_wall", (-125, 100)], ["vertical_wall", (-200, 200)], ["right_lean_wall", (-200, 300)], ["vertical_wall", (-125, 400)], ["left_lean_wall", (-125, 500)], ["vertical_wall", (-200, 400)], ["right_lean_wall", (-200, 400)], ["vertical_wall", (-125, 400)], ["left_lean_wall", (-125, 400)], ["vertical_wall", (-200, 400)], ["right_lean_wall", (-200, 400)], ["vertical_wall", (-125, 400)], ["left_lean_wall", (-125, 400)],]
+        self.blueprint = [["vertical_wall", (-300, -200)], ["right_lean_wall", (-300, -100)], ["vertical_wall", (-225, 0)], ["left_lean_wall", (-225, 100)], ["vertical_wall", (-300, 200)], ["right_lean_wall", (-300, 300)], ["vertical_wall", (-225, 400)], ["left_lean_wall", (-225, 500)], ["vertical_wall", (-300, 400)], ["right_lean_wall", (-300, 400)], ["vertical_wall", (-225, 400)], ["left_lean_wall", (-225, 400)], ["vertical_wall", (-300, 400)], ["right_lean_wall", (-300, 400)], ["vertical_wall", (-225, 400)], ["left_lean_wall", (-225, 400)],]
 
     def draw_screen(self):
         self.window.bgcolor("black")
@@ -299,6 +325,31 @@ class Game():
         self.window.register_shape("vertical_wall", ((0, 0), (5, 0), (5, 100), (0, 100)))
         self.window.register_shape("right_lean_wall", ((0, 0), (5, 0), (80, 100), (75, 100)))
         self.window.register_shape("left_lean_wall", ((5, 0), (0, 0), (-75, 100), (-70, 100)))
+
+    # left wall only
+    def left_border_test(self, player):
+        # if player.xcor() < 0:
+        for wall in self.wall_list:
+            if ((wall.ycor() - 5 < player.ycor() < (wall.ycor() + 110))) and (wall.slope != None) and (player.xcor() - wall.xcor() < 80):
+                wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
+                player_offset = (wall.slope * player.xcor() - player.ycor())
+
+                # left lean wall
+                if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "left_lean_wall":
+                    player.setposition((player.xcor() - (player.x_speed - 5)), (player.ycor() - (player.y_speed - 5)))
+                    print('bounced ya')
+                    player.bounce_up_angle = True
+
+                if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "right_lean_wall":
+                    player.setposition((player.xcor() - (player.x_speed - 5)), (player.ycor() - (player.y_speed + 5)))
+                    print('bounced ya')
+                    player.bounce_down_angle = True
+
+            if wall.slope == None:
+                if abs(player.xcor()) > (abs(wall.xcor()) - 10) and wall.ycor() < player.ycor() < (wall.ycor() + 100):
+                    player.setposition((player.xcor() - (player.x_speed - 5)), player.ycor())
+                    print('bounced ya')
+                    player.bounce_horizontal = True
 
     # set up first eight pieces
     def build_map(self):
@@ -422,6 +473,9 @@ def main():
         enemy_handler.enemy_advance()
         enemy_handler.enemy_autofire()
         enemy_bullet_handler.advance_bullet()
+
+        if player.xcor() < 0:
+            game.left_border_test(player)
 
         player.stabalize()
 
