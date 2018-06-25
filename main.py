@@ -19,10 +19,6 @@ class Player(turtle.Turtle):
         self.lives = True
         self.stabalize_delay = 15
         self.bullet_handler = bullet_handler
-        self.bounce_up_angle = False
-        self.bounce_down_angle = False
-        self.bounce_horizontal = False
-        self.recoil_time = 0
 
     # move forward
     def increase_y_speed(self):
@@ -52,28 +48,21 @@ class Player(turtle.Turtle):
 
         self.stabalize_delay = 15
 
+    def bounce(self, new_x_speed, new_y_speed):
+        if new_x_speed != None:
+            self.x_speed = new_x_speed
+        if new_y_speed != None:
+            self.y_speed = new_y_speed
+
     # constant flight
     def constant_flight(self):
         self.setposition((self.xcor() + self.x_speed),
                         (self.ycor() + self.y_speed))
 
-        if self.bounce_up_angle == True:
-            self.x_speed = 1
-            self.y_speed = 1
-            self.bounce_up_angle = False
-
-        if self.bounce_down_angle == True:
-            self.x_speed = 1
-            self.y_speed = -1
-            self.bounce_down_angle = False
-
-        if self.bounce_horizontal == True:
-            self.x_speed = 2
-            self.bounce_horizontal = False
-
         if abs(self.xcor()) > 300:
             self.setposition((self.xcor() - self.x_speed), self.ycor())
 
+        # scrolling sidewall can squeeze player below bottom boundary - needs fix
         if abs(self.ycor()) > 300:
             self.setposition(self.xcor(), (self.ycor() - self.y_speed))
 
@@ -326,30 +315,33 @@ class Game():
         self.window.register_shape("right_lean_wall", ((0, 0), (5, 0), (80, 100), (75, 100)))
         self.window.register_shape("left_lean_wall", ((5, 0), (0, 0), (-75, 100), (-70, 100)))
 
+    # def right_border_test():
+    #     pass
+
     # left wall only
     def left_border_test(self, player):
-        # if player.xcor() < 0:
         for wall in self.wall_list:
-            if ((wall.ycor() - 5 < player.ycor() < (wall.ycor() + 110))) and (wall.slope != None) and (player.xcor() - wall.xcor() < 80):
+            if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and (player.xcor() - wall.xcor() < 80):
                 wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
                 player_offset = (wall.slope * player.xcor() - player.ycor())
 
                 # left lean wall
                 if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "left_lean_wall":
-                    player.setposition((player.xcor() - (player.x_speed - 5)), (player.ycor() - (player.y_speed - 5)))
-                    print('bounced ya')
-                    player.bounce_up_angle = True
+                    player.setposition((player.xcor() - (player.x_speed)), (player.ycor() - (player.y_speed)))
+                    print('bounced ya') # for real time debugging
+                    player.bounce(0, 0)
 
+                # right lean wall
                 if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "right_lean_wall":
-                    player.setposition((player.xcor() - (player.x_speed - 5)), (player.ycor() - (player.y_speed + 5)))
+                    player.setposition((player.xcor() - (player.x_speed - 2)), (player.ycor() - (player.y_speed + 3)))
                     print('bounced ya')
-                    player.bounce_down_angle = True
+                    player.bounce(1, -1)
 
             if wall.slope == None:
-                if abs(player.xcor()) > (abs(wall.xcor()) - 10) and wall.ycor() < player.ycor() < (wall.ycor() + 100):
-                    player.setposition((player.xcor() - (player.x_speed - 5)), player.ycor())
+                if abs(player.xcor()) > (abs(wall.xcor()) - 5) and wall.ycor() <= player.ycor() <= (wall.ycor() + 102):
+                    player.setposition((player.xcor() - (player.x_speed - 3)), player.ycor())
                     print('bounced ya')
-                    player.bounce_horizontal = True
+                    player.bounce(0, None)
 
     # set up first eight pieces
     def build_map(self):
