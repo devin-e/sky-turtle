@@ -2,6 +2,7 @@ import turtle
 import time
 import random
 import math
+from blueprints import Blueprint_Manager
 
 
 class Player(turtle.Turtle):
@@ -287,10 +288,12 @@ class Wall_Section(turtle.Turtle):
 
 
 # Move this class to a separate module to avoid cluttering main. Initialize with all level blueprints. Pass blueprints to game object as levels are moved through.
-class Blueprint_Manager():
+# class Blueprint_Manager():
 
-    def __init__(self):
-        self.level_one_blueprint = [["vertical_wall", (-200, -200)], ["right_lean_wall", (-200, -100)]]
+#     def __init__(self):
+#         self.level_one_blueprint = [["vertical_wall", (-200, -200)], ["right_lean_wall", (-200, -100)]]
+
+
 
 
 class Game():
@@ -300,9 +303,12 @@ class Game():
         self.scroll_speed = 1
         self.wall_list = []
 
+        self.blueprint_manager = Blueprint_Manager()
         # going to need a left blueprint and right blueprint
         # move this list to blueprint manager and pass to Game init method
-        self.blueprint = [["vertical_wall", (-300, -200)], ["right_lean_wall", (-300, -100)], ["vertical_wall", (-225, 0)], ["left_lean_wall", (-225, 100)], ["vertical_wall", (-300, 200)], ["right_lean_wall", (-300, 300)], ["vertical_wall", (-225, 400)], ["left_lean_wall", (-225, 500)], ["vertical_wall", (-300, 400)], ["right_lean_wall", (-300, 400)], ["vertical_wall", (-225, 400)], ["left_lean_wall", (-225, 400)], ["vertical_wall", (-300, 400)], ["right_lean_wall", (-300, 400)], ["vertical_wall", (-225, 400)], ["left_lean_wall", (-225, 400)],]
+
+        # consider making a master blueprint in the blueprint manager that is built by alternatig between left blueprint and right blueprint. so it's already organized to build both sides together. Edit left border test method to check left and right border.
+        self.blueprint = self.blueprint_manager.right_wall_blueprint
 
     def draw_screen(self):
         self.window.bgcolor("black")
@@ -310,13 +316,37 @@ class Game():
         self.window.title("Sky Turtle")
         self.window.tracer(0)
 
+        print(self.blueprint)
+
         # border pieces
         self.window.register_shape("vertical_wall", ((0, 0), (5, 0), (5, 100), (0, 100)))
         self.window.register_shape("right_lean_wall", ((0, 0), (5, 0), (80, 100), (75, 100)))
         self.window.register_shape("left_lean_wall", ((5, 0), (0, 0), (-75, 100), (-70, 100)))
 
-    # def right_border_test():
-    #     pass
+    # clean this.
+    def right_border_test(self, player):
+        for wall in self.wall_list:
+            if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and abs(player.xcor() - wall.xcor() < 80):
+                wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
+                player_offset = (wall.slope * player.xcor() - player.ycor())
+
+                # left lean wall
+                if abs(abs(wall_offset) - abs(player_offset)) < 10 and wall.shape == "left_lean_wall":
+                    player.setposition((player.xcor() - (player.x_speed + 2)), (player.ycor() - (player.y_speed + 3)))
+                    print('bounced ya') # for real time debugging
+                    player.bounce(-1, -1)
+
+                # right lean wall
+                if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "right_lean_wall":
+                    player.setposition((player.xcor() - (player.x_speed)), (player.ycor() - (player.y_speed)))
+                    print('bounced ya')
+                    player.bounce(0, 0)
+
+            if wall.slope == None:
+                if abs(player.xcor()) > (abs(wall.xcor()) - 5) and wall.ycor() <= player.ycor() <= (wall.ycor() + 102):
+                    player.setposition((player.xcor() - (player.x_speed + 3)), player.ycor())
+                    print('bounced ya')
+                    player.bounce(0, None)
 
     # left wall only
     def left_border_test(self, player):
@@ -468,6 +498,8 @@ def main():
 
         if player.xcor() < 0:
             game.left_border_test(player)
+        elif player.xcor() > 0:
+            game.right_border_test(player)
 
         player.stabalize()
 
