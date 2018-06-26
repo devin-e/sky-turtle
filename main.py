@@ -63,7 +63,6 @@ class Player(turtle.Turtle):
         if abs(self.xcor()) > 310:
             self.setposition((self.xcor() - self.x_speed), self.ycor())
 
-        # scrolling sidewall can squeeze player below bottom boundary - needs fix
         if abs(self.ycor()) > 270:
             self.setposition(self.xcor(), (self.ycor() - self.y_speed))
 
@@ -320,7 +319,11 @@ class Game():
 
                 if 0 < abs(wall_offset - player_offset) < 10 and wall.type == "roof":
                     player.setposition((player.xcor() - (player.x_speed * 1.3)), (player.ycor() - (player.y_speed + 3)))
-                    if wall.shape == "left_lean_wall":
+                    if wall.ycor() <= -270 and wall.shape == "left_lean_wall":
+                        player.bounce(-7, 3)
+                    elif wall.ycor() <= -270 and wall.shape == "right_lean_wall":
+                        player.bounce(7, 3)
+                    elif wall.shape == "left_lean_wall":
                         player.bounce(-1, -1)
                     else:
                         player.bounce(1, -1)
