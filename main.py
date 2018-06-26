@@ -60,11 +60,11 @@ class Player(turtle.Turtle):
         self.setposition((self.xcor() + self.x_speed),
                         (self.ycor() + self.y_speed))
 
-        if abs(self.xcor()) > 300:
+        if abs(self.xcor()) > 310:
             self.setposition((self.xcor() - self.x_speed), self.ycor())
 
         # scrolling sidewall can squeeze player below bottom boundary - needs fix
-        if abs(self.ycor()) > 300:
+        if abs(self.ycor()) > 270:
             self.setposition(self.xcor(), (self.ycor() - self.y_speed))
 
     # gradually settles ship if player is not changing direction
@@ -198,11 +198,15 @@ class Border(turtle.Turtle):
         self.pensize(5)
 
     def draw_border(self):
-        self.setposition(-300, -300)
+        self.setposition(-300, -280)
         self.pendown()
-        for _ in range(4):
+        for _ in range(2):
             self.forward(600)
             self.left(90)
+            self.penup()
+            self.forward(580)
+            self.left(90)
+            self.pendown()
 
 
 class Enemy_Handler():
@@ -268,7 +272,7 @@ class Bullet(turtle.Turtle):
 
 class Wall_Section(turtle.Turtle):
 
-    def __init__(self, shape, position):
+    def __init__(self, shape, position, type):
         turtle.Turtle.__init__(self)
         self.hideturtle()
         self.penup()
@@ -278,6 +282,7 @@ class Wall_Section(turtle.Turtle):
         self.setposition(position)
         self.showturtle()
         self.shape = shape
+        self.type = type
 
         if self.shape == "right_lean_wall":
             self.slope = 4/3
@@ -307,62 +312,32 @@ class Game():
         self.window.register_shape("right_lean_wall", ((0, 0), (5, 0), (80, 100), (75, 100)))
         self.window.register_shape("left_lean_wall", ((5, 0), (0, 0), (-75, 100), (-70, 100)))
 
-    # clean this.
-    def right_border_test(self, player):
-        for wall in self.right_wall_list:
+    def border_test(self, player, wall_list):
+        for wall in wall_list:
             if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and abs(wall.xcor() - player.xcor() < 80):
                 wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
                 player_offset = (wall.slope * player.xcor() - player.ycor())
 
-                # left lean wall
-                if abs(abs(wall_offset) - abs(player_offset)) < 10 and wall.shape == "left_lean_wall":
-                    player.setposition((player.xcor() - (player.x_speed + 2)), (player.ycor() - (player.y_speed + 3)))
-                    print('bounced ya') # for real time debugging
-                    player.bounce(-1, -1)
+                if 0 < abs(wall_offset - player_offset) < 10 and wall.type == "roof":
+                    player.setposition((player.xcor() - (player.x_speed * 1.3)), (player.ycor() - (player.y_speed + 3)))
+                    if wall.shape == "left_lean_wall":
+                        player.bounce(-1, -1)
+                    else:
+                        player.bounce(1, -1)
 
-                # right lean wall
-                if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "right_lean_wall":
+                if 0 < abs(wall_offset - player_offset) < 10 and wall.type == "floor":
                     player.setposition((player.xcor() - (player.x_speed)), (player.ycor() - (player.y_speed)))
-                    print('bounced ya')
                     player.bounce(0, 0)
 
             if wall.slope == None:
                 if abs(player.xcor()) > (abs(wall.xcor()) - 5) and wall.ycor() <= player.ycor() <= (wall.ycor() + 102):
-                    player.setposition((player.xcor() - (player.x_speed + 3)), player.ycor())
-                    print('bounced ya')
-                    player.bounce(0, None)
-
-    # left wall only
-    def left_border_test(self, player):
-        for wall in self.left_wall_list:
-            if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and (player.xcor() - wall.xcor() < 80):
-                wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
-                player_offset = (wall.slope * player.xcor() - player.ycor())
-
-                # left lean wall
-                if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "left_lean_wall":
-                    player.setposition((player.xcor() - (player.x_speed)), (player.ycor() - (player.y_speed)))
-                    print('bounced ya') # for real time debugging
-                    player.bounce(0, 0)
-
-                # right lean wall
-                if abs(abs(player_offset) - abs(wall_offset)) < 10 and wall.shape == "right_lean_wall":
-                    player.setposition((player.xcor() - (player.x_speed - 2)), (player.ycor() - (player.y_speed + 3)))
-                    print('bounced ya')
-                    player.bounce(1, -1)
-
-            if wall.slope == None:
-                if abs(player.xcor()) > (abs(wall.xcor()) - 5) and wall.ycor() <= player.ycor() <= (wall.ycor() + 102):
-                    player.setposition((player.xcor() - (player.x_speed - 3)), player.ycor())
-                    print('bounced ya')
+                    player.setposition((player.xcor() - (player.x_speed * 1.3)), player.ycor())
                     player.bounce(0, None)
 
     # set up first eight pieces
     def build_map(self, blueprint, wall_list):
         for template in blueprint[:8]:
-            shape = template[0]
-            position = template[1]
-            wall_section = Wall_Section(shape, position)
+            wall_section = Wall_Section(template[0], template[1], template[2])
             wall_list.append(wall_section)
         for _ in range(8):
             del blueprint[0]
@@ -375,12 +350,9 @@ class Game():
 
 
         if len(wall_list) < 8 and len(blueprint) > 0:
-            template = blueprint[0]
-            shape = template[0]
-            position = template[1]
-            wall_section = Wall_Section(shape, position)
+            wall_section = Wall_Section(blueprint[0][0], blueprint[0][1], blueprint[0][2])
             wall_list.append(wall_section)
-            blueprint.remove(template)
+            del blueprint[0]
 
     # build spinning obstacles later
     # def spin_walls(self):
@@ -486,9 +458,9 @@ def main():
         enemy_bullet_handler.advance_bullet()
 
         if player.xcor() < 0:
-            game.left_border_test(player)
+            game.border_test(player, game.left_wall_list)
         if player.xcor() > 0:
-            game.right_border_test(player)
+            game.border_test(player, game.right_wall_list)
 
         player.stabalize()
 
