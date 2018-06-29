@@ -109,25 +109,6 @@ class Player(turtle.Turtle):
         self.lives = False
 
 
-class Bullet_Handler():
-
-    def __init__(self):
-        self.bullet_list = []
-
-    def advance_bullet(self):
-        for bullet in self.bullet_list:
-            bullet.forward(bullet.move_speed)
-
-            if abs(bullet.ycor()) > 300:
-                self.remove_bullet(bullet)
-
-    def remove_bullet(self, bullet):
-        bullet.clear()
-        bullet.hideturtle()
-        self.bullet_list.remove(bullet)
-
-
-
 class Enemy(turtle.Turtle):
 
     def __init__(self, enemy_handler, bullet_handler):
@@ -184,28 +165,6 @@ class Smart_Enemy(Enemy):
             bullet.showturtle()
             self.bullet_handler.bullet_list.append(bullet)
             self.bullet_delay = 90
-
-
-class Border(turtle.Turtle):
-
-    def __init__(self):
-        turtle.Turtle.__init__(self)
-        self.penup()
-        self.hideturtle()
-        self.speed(0)
-        self.color("white")
-        self.pensize(5)
-
-    def draw_border(self):
-        self.setposition(-300, -280)
-        self.pendown()
-        for _ in range(2):
-            self.forward(600)
-            self.left(90)
-            self.penup()
-            self.forward(580)
-            self.left(90)
-            self.pendown()
 
 
 class Enemy_Handler():
@@ -269,6 +228,109 @@ class Bullet(turtle.Turtle):
             self.color("red")
 
 
+class Bullet_Handler():
+
+    def __init__(self):
+        self.bullet_list = []
+
+    def advance_bullet(self):
+        for bullet in self.bullet_list:
+            bullet.forward(bullet.move_speed)
+
+            if abs(bullet.ycor()) > 300:
+                self.remove_bullet(bullet)
+
+    def remove_bullet(self, bullet):
+        bullet.clear()
+        bullet.hideturtle()
+        self.bullet_list.remove(bullet)
+
+
+class Boundary_Handler():
+
+    def __init__(self):
+        self.boundary_list = []
+
+    def create_boundaries(self):
+        self.top_boundary = Boundary()
+        self.top_boundary.setheading(90)
+        self.top_boundary.setposition(-310, 303)
+        self.boundary_list.append(self.top_boundary)
+        self.bottom_boundary = Boundary()
+        self.bottom_boundary.setposition(-310, -383)
+        self.bottom_boundary.setheading(90)
+        self.boundary_list.append(self.bottom_boundary)
+
+    def reset_boundary(self, boundary):
+        boundary.clear()
+        boundary.reset()
+        boundary.hideturtle()
+        del boundary
+
+
+class Map_Handler():
+
+    def __init__(self):
+        self.scroll_speed = 1
+        self.right_wall_list = []
+        self.left_wall_list = []
+
+    def border_test(self, player, wall_list):
+        for wall in wall_list:
+            if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and abs(wall.xcor() - player.xcor() < 80):
+                wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
+                player_offset = (wall.slope * player.xcor() - player.ycor())
+
+                if 0 < abs(wall_offset - player_offset) < 10 and wall.type == "roof":
+                    player.setposition((player.xcor() - (player.x_speed * 1.3)), (player.ycor() - (player.y_speed + 3)))
+                    if wall.ycor() <= -270 and wall.shape == "left_lean_wall":
+                        player.bounce(-7, 3)
+                    elif wall.ycor() <= -270 and wall.shape == "right_lean_wall":
+                        player.bounce(7, 3)
+                    elif wall.shape == "left_lean_wall":
+                        player.bounce(-1, -1)
+                    else:
+                        player.bounce(1, -1)
+
+                if 0 < abs(wall_offset - player_offset) < 10 and wall.type == "floor":
+                    player.setposition((player.xcor() - (player.x_speed)), (player.ycor() - (player.y_speed)))
+                    player.bounce(0, 0)
+
+            if wall.slope == None:
+                if abs(player.xcor()) > (abs(wall.xcor()) - 5) and wall.ycor() <= player.ycor() <= (wall.ycor() + 102):
+                    player.setposition((player.xcor() - (player.x_speed * 1.3)), player.ycor())
+                    player.bounce(0, None)
+
+    # set up first eight pieces
+    def build_map(self, blueprint, wall_list):
+        for template in blueprint[:8]:
+            wall_section = Wall_Section(template[0], template[1], template[2])
+            wall_list.append(wall_section)
+        for _ in range(8):
+            del blueprint[0]
+
+    def scroll_map(self, blueprint, wall_list, boundary_handler):
+        for wall in wall_list:
+            wall.setposition(wall.xcor(), wall.ycor() - self.scroll_speed)
+            if wall.ycor() < -400:
+                wall.clear()
+                wall.hideturtle()
+                wall_list.remove(wall)
+
+        if len(wall_list) < 8 and len(blueprint) > 0:
+            if len(boundary_handler.boundary_list) > 0:
+                boundary_handler.reset_boundary(boundary_handler.boundary_list[0])
+                boundary_handler.reset_boundary(boundary_handler.boundary_list[1])
+                del boundary_handler.boundary_list[0]
+                del boundary_handler.boundary_list[0]
+
+            wall_section = Wall_Section(blueprint[0][0], blueprint[0][1], blueprint[0][2])
+            wall_list.append(wall_section)
+            boundary_handler.create_boundaries()
+
+            del blueprint[0]
+
+
 class Wall_Section(turtle.Turtle):
 
     def __init__(self, shape, position, type):
@@ -305,10 +367,9 @@ class Game():
 
     def __init__(self):
         self.window = turtle.Screen()
-        self.scroll_speed = 1
-        self.right_wall_list = []
-        self.left_wall_list = []
-        self.boundary_list = []
+        # self.scroll_speed = 1
+        # self.right_wall_list = []
+        # self.left_wall_list = []
 
     def draw_screen(self):
         self.window.bgcolor("black")
@@ -321,105 +382,6 @@ class Game():
         self.window.register_shape("right_lean_wall", ((0, 0), (5, 0), (80, 100), (75, 100)))
         self.window.register_shape("left_lean_wall", ((5, 0), (0, 0), (-75, 100), (-70, 100)))
         self.window.register_shape("conceal_boundary", ((0, 0), (620, 0), (620, 100), (0, 100)))
-
-    def create_boundaries(self):
-        self.top_boundary = Boundary()
-        self.top_boundary.setheading(90)
-        self.top_boundary.setposition(-310, 303)
-        self.boundary_list.append(self.top_boundary)
-        self.bottom_boundary = Boundary()
-        self.bottom_boundary.setposition(-310, -383)
-        self.bottom_boundary.setheading(90)
-        self.boundary_list.append(self.bottom_boundary)
-
-    def reset_boundary(self, boundary):
-        boundary.clear()
-        boundary.reset()
-        boundary.hideturtle()
-        del boundary
-
-    def border_test(self, player, wall_list):
-        for wall in wall_list:
-            if ((wall.ycor() <= player.ycor() <= (wall.ycor() + 102))) and (wall.slope != None) and abs(wall.xcor() - player.xcor() < 80):
-                wall_offset = (wall.slope * wall.xcor()) - wall.ycor()
-                player_offset = (wall.slope * player.xcor() - player.ycor())
-
-                if 0 < abs(wall_offset - player_offset) < 10 and wall.type == "roof":
-                    player.setposition((player.xcor() - (player.x_speed * 1.3)), (player.ycor() - (player.y_speed + 3)))
-                    if wall.ycor() <= -270 and wall.shape == "left_lean_wall":
-                        player.bounce(-7, 3)
-                    elif wall.ycor() <= -270 and wall.shape == "right_lean_wall":
-                        player.bounce(7, 3)
-                    elif wall.shape == "left_lean_wall":
-                        player.bounce(-1, -1)
-                    else:
-                        player.bounce(1, -1)
-
-                if 0 < abs(wall_offset - player_offset) < 10 and wall.type == "floor":
-                    player.setposition((player.xcor() - (player.x_speed)), (player.ycor() - (player.y_speed)))
-                    player.bounce(0, 0)
-
-            if wall.slope == None:
-                if abs(player.xcor()) > (abs(wall.xcor()) - 5) and wall.ycor() <= player.ycor() <= (wall.ycor() + 102):
-                    player.setposition((player.xcor() - (player.x_speed * 1.3)), player.ycor())
-                    player.bounce(0, None)
-
-    # set up first eight pieces
-    def build_map(self, blueprint, wall_list):
-        for template in blueprint[:8]:
-            wall_section = Wall_Section(template[0], template[1], template[2])
-            wall_list.append(wall_section)
-        for _ in range(8):
-            del blueprint[0]
-
-    def scroll_map(self, blueprint, wall_list):
-        for wall in wall_list:
-            wall.setposition(wall.xcor(), wall.ycor() - self.scroll_speed)
-            if wall.ycor() < -400:
-                wall.clear()
-                wall.hideturtle()
-                wall_list.remove(wall)
-
-
-        if len(wall_list) < 8 and len(blueprint) > 0:
-            if len(self.boundary_list) > 0:
-                self.reset_boundary(self.boundary_list[0])
-                self.reset_boundary(self.boundary_list[1])
-                del self.boundary_list[0]
-                del self.boundary_list[0]
-
-            wall_section = Wall_Section(blueprint[0][0], blueprint[0][1], blueprint[0][2])
-            wall_list.append(wall_section)
-            self.create_boundaries()
-
-            del blueprint[0]
-
-
-    def new_game(self):
-        turtle.resetscreen()
-        turtle.clearscreen()
-
-
-    def create_player(self, bullet_handler, stabalize_delay):
-        player = Player(bullet_handler, stabalize_delay)
-
-        turtle.listen()
-        turtle.onkeypress(player.increase_y_speed, "w")
-        turtle.onkeypress(player.increase_x_speed, "d")
-        turtle.onkeypress(player.decrease_x_speed, "a")
-        turtle.onkeypress(player.decrease_y_speed, "s")
-
-        turtle.onkey(player.increase_y_speed, "w")
-        turtle.onkey(player.increase_x_speed, "d")
-        turtle.onkey(player.decrease_x_speed, "a")
-        turtle.onkey(player.decrease_y_speed, "s")
-
-        turtle.onkey(player.die, "p")
-
-        turtle.onkeypress(player.shoot, "u")
-        turtle.onkey(player.shoot, "u")
-
-        return player
 
 
     def detect_collision(self, player, bullet_handler, enemy_handler,
@@ -449,39 +411,62 @@ class Game():
             if distance < 12:
                 player.die()
 
+    def new_game(self):
+        turtle.resetscreen()
+        turtle.clearscreen()
+
+    def create_player(self, bullet_handler, stabalize_delay):
+        player = Player(bullet_handler, stabalize_delay)
+
+        turtle.listen()
+        turtle.onkeypress(player.increase_y_speed, "w")
+        turtle.onkeypress(player.increase_x_speed, "d")
+        turtle.onkeypress(player.decrease_x_speed, "a")
+        turtle.onkeypress(player.decrease_y_speed, "s")
+
+        turtle.onkey(player.increase_y_speed, "w")
+        turtle.onkey(player.increase_x_speed, "d")
+        turtle.onkey(player.decrease_x_speed, "a")
+        turtle.onkey(player.decrease_y_speed, "s")
+
+        turtle.onkey(player.die, "p")
+
+        turtle.onkeypress(player.shoot, "u")
+        turtle.onkey(player.shoot, "u")
+
+        return player
+
 
 def main():
 
     game = Game()
     blueprint_manager = Blueprint_Manager()
-
-    game.new_game()
-
-    game.draw_screen()
-    game.build_map(blueprint_manager.right_wall_blueprint, game.right_wall_list)
-    game.build_map(blueprint_manager.left_wall_blueprint, game.left_wall_list)
-
-    fps = 60
-    time_delta = 1.0/fps
-
-    # border = Border()
-    # border.draw_border()
-
+    boundary_handler = Boundary_Handler()
+    map_handler = Map_Handler()
     bullet_handler = Bullet_Handler()
-    player = game.create_player(bullet_handler, stabalize_delay = 15)
-
     enemy_handler = Enemy_Handler()
     enemy_bullet_handler = Bullet_Handler()
 
-    game.create_boundaries()
+    game.new_game()
+    game.draw_screen()
+
+    map_handler.build_map(blueprint_manager.right_wall_blueprint, map_handler.right_wall_list)
+    map_handler.build_map(blueprint_manager.left_wall_blueprint, map_handler.left_wall_list)
+
+    player = game.create_player(bullet_handler, stabalize_delay = 15)
+
+    boundary_handler.create_boundaries()
+
+    fps = 60
+    time_delta = 1.0/fps
 
     while player.lives:
         time.sleep(time_delta)
         game.window.update()
 
-        game.scroll_map(blueprint_manager.right_wall_blueprint, game.right_wall_list)
+        map_handler.scroll_map(blueprint_manager.right_wall_blueprint, map_handler.right_wall_list, boundary_handler)
 
-        game.scroll_map(blueprint_manager.left_wall_blueprint, game.left_wall_list)
+        map_handler.scroll_map(blueprint_manager.left_wall_blueprint, map_handler.left_wall_list, boundary_handler)
 
         player.constant_flight()
         player.reload_bullet()
@@ -496,16 +481,16 @@ def main():
         enemy_bullet_handler.advance_bullet()
 
         if player.xcor() < 0:
-            game.border_test(player, game.left_wall_list)
+            map_handler.border_test(player, map_handler.left_wall_list)
         if player.xcor() > 0:
-            game.border_test(player, game.right_wall_list)
+            map_handler.border_test(player, map_handler.right_wall_list)
 
         player.stabalize()
 
-    game.reset_boundary(game.boundary_list[0])
-    game.reset_boundary(game.boundary_list[1])
-    del game.boundary_list[0]
-    del game.boundary_list[0]
+    boundary_handler.reset_boundary(boundary_handler.boundary_list[0])
+    boundary_handler.reset_boundary(boundary_handler.boundary_list[1])
+    del boundary_handler.boundary_list[0]
+    del boundary_handler.boundary_list[0]
 
     game.window.bgcolor("red")
 
