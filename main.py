@@ -291,6 +291,16 @@ class Wall_Section(turtle.Turtle):
             self.slope = None
 
 
+class Boundary(turtle.Turtle):
+
+    def __init__(self):
+        turtle.Turtle.__init__(self)
+        self.penup()
+        self.shape("conceal_boundary")
+        self.color("black")
+        self.speed(0)
+
+
 class Game():
 
     def __init__(self):
@@ -298,7 +308,7 @@ class Game():
         self.scroll_speed = 1
         self.right_wall_list = []
         self.left_wall_list = []
-        self.main_wall_list = []
+        self.boundary_list = []
 
     def draw_screen(self):
         self.window.bgcolor("black")
@@ -310,6 +320,23 @@ class Game():
         self.window.register_shape("vertical_wall", ((0, 0), (5, 0), (5, 100), (0, 100)))
         self.window.register_shape("right_lean_wall", ((0, 0), (5, 0), (80, 100), (75, 100)))
         self.window.register_shape("left_lean_wall", ((5, 0), (0, 0), (-75, 100), (-70, 100)))
+        self.window.register_shape("conceal_boundary", ((0, 0), (620, 0), (620, 100), (0, 100)))
+
+    def create_boundaries(self):
+        self.top_boundary = Boundary()
+        self.top_boundary.setheading(90)
+        self.top_boundary.setposition(-310, 303)
+        self.boundary_list.append(self.top_boundary)
+        self.bottom_boundary = Boundary()
+        self.bottom_boundary.setposition(-310, -383)
+        self.bottom_boundary.setheading(90)
+        self.boundary_list.append(self.bottom_boundary)
+
+    def reset_boundary(self, boundary):
+        boundary.clear()
+        boundary.reset()
+        boundary.hideturtle()
+        del boundary
 
     def border_test(self, player, wall_list):
         for wall in wall_list:
@@ -349,18 +376,24 @@ class Game():
         for wall in wall_list:
             wall.setposition(wall.xcor(), wall.ycor() - self.scroll_speed)
             if wall.ycor() < -400:
+                wall.clear()
+                wall.hideturtle()
                 wall_list.remove(wall)
 
 
         if len(wall_list) < 8 and len(blueprint) > 0:
+            if len(self.boundary_list) > 0:
+                self.reset_boundary(self.boundary_list[0])
+                self.reset_boundary(self.boundary_list[1])
+                del self.boundary_list[0]
+                del self.boundary_list[0]
+
             wall_section = Wall_Section(blueprint[0][0], blueprint[0][1], blueprint[0][2])
             wall_list.append(wall_section)
+            self.create_boundaries()
+
             del blueprint[0]
 
-    # build spinning obstacles later
-    # def spin_walls(self):
-    #     for wall in self.wall_list:
-    #         wall.setheading(wall.heading() + 1)
 
     def new_game(self):
         turtle.resetscreen()
@@ -431,14 +464,16 @@ def main():
     fps = 60
     time_delta = 1.0/fps
 
-    border = Border()
-    border.draw_border()
+    # border = Border()
+    # border.draw_border()
 
     bullet_handler = Bullet_Handler()
     player = game.create_player(bullet_handler, stabalize_delay = 15)
 
     enemy_handler = Enemy_Handler()
     enemy_bullet_handler = Bullet_Handler()
+
+    game.create_boundaries()
 
     while player.lives:
         time.sleep(time_delta)
@@ -466,6 +501,11 @@ def main():
             game.border_test(player, game.right_wall_list)
 
         player.stabalize()
+
+    game.reset_boundary(game.boundary_list[0])
+    game.reset_boundary(game.boundary_list[1])
+    del game.boundary_list[0]
+    del game.boundary_list[0]
 
     game.window.bgcolor("red")
 
