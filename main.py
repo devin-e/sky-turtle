@@ -1,7 +1,7 @@
 import turtle
 import time
 from game import Game
-from blueprints import Blueprint_Manager
+from blueprint_handler import Blueprint_Handler
 from map_handler import Map_Handler
 from boundary_handler import Boundary_Handler
 from player_handler import Player_Handler
@@ -13,7 +13,7 @@ def main():
 
     game = Game()
     player_handler = Player_Handler()
-    blueprint_manager = Blueprint_Manager()
+    blueprint_handler = Blueprint_Handler()
     boundary_handler = Boundary_Handler()
     map_handler = Map_Handler()
     bullet_handler = Bullet_Handler()
@@ -23,8 +23,8 @@ def main():
     game.new_game()
     game.draw_screen()
 
-    map_handler.build_map(blueprint_manager.right_wall_blueprint, map_handler.right_wall_list)
-    map_handler.build_map(blueprint_manager.left_wall_blueprint, map_handler.left_wall_list)
+    map_handler.build_map(blueprint_handler.right_wall_blueprint, map_handler.right_wall_list)
+    map_handler.build_map(blueprint_handler.left_wall_blueprint, map_handler.left_wall_list)
 
     player = player_handler.create_player(bullet_handler, stabalize_delay = 15)
 
@@ -37,9 +37,9 @@ def main():
         time.sleep(time_delta)
         game.window.update()
 
-        map_handler.scroll_map(blueprint_manager.right_wall_blueprint, map_handler.right_wall_list, boundary_handler)
+        map_handler.scroll_map(blueprint_handler.right_wall_blueprint, map_handler.right_wall_list, boundary_handler)
 
-        map_handler.scroll_map(blueprint_manager.left_wall_blueprint, map_handler.left_wall_list, boundary_handler)
+        map_handler.scroll_map(blueprint_handler.left_wall_blueprint, map_handler.left_wall_list, boundary_handler)
 
         player.constant_flight()
         player.reload_bullet()
