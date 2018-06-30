@@ -1,5 +1,5 @@
 
-class Blueprint_Manager():
+class Blueprint_Handler():
 
     def __init__(self):
 
