@@ -2,7 +2,6 @@
 class Blueprint_Manager():
 
     def __init__(self):
-        self.level_one_blueprint = []
 
         # blueprint format is [shape, position, type]
         self.left_wall_blueprint = [
