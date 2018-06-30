@@ -29,7 +29,7 @@ def main():
     map_handler.build_map(blueprint_handler.right_wall_blueprint, map_handler.right_wall_list)
     map_handler.build_map(blueprint_handler.left_wall_blueprint, map_handler.left_wall_list)
 
-    player = player_handler.create_player(bullet_handler, stabalize_delay = 15)
+    player = player_handler.create_player(bullet_handler)
 
     boundary_handler.create_boundaries()
 
@@ -51,7 +51,7 @@ def main():
 
         enemy_handler.spawn_smart_enemy(enemy_bullet_handler, player)
         enemy_handler.spawn_enemy(enemy_bullet_handler)
-        game.detect_collision(player, bullet_handler, enemy_handler, enemy_bullet_handler)
+        game.detect_collision(player, bullet_handler, enemy_handler, enemy_bullet_handler, power_up_handler)
         bullet_handler.advance_bullet()
 
         enemy_handler.enemy_advance()

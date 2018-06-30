@@ -15,6 +15,11 @@ class Power_Up_Handler():
             power_up.spin()
             power_up.flash()
 
+    def remove_power_up(self, power_up):
+        power_up.clear()
+        power_up.hideturtle()
+        self.power_up_list.remove(power_up)
+
 
 class Power_Up(turtle.Turtle):
 

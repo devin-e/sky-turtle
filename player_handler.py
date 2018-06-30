@@ -1,4 +1,5 @@
 import turtle
+import time
 
 
 class Player_Handler():
@@ -7,8 +8,8 @@ class Player_Handler():
         self.player_score = 0
         self.number_of_lives = 1
 
-    def create_player(self, bullet_handler, stabalize_delay):
-        player = Player(bullet_handler, stabalize_delay)
+    def create_player(self, bullet_handler):
+        player = Player(bullet_handler)
 
         turtle.listen()
         turtle.onkeypress(player.increase_y_speed, "w")
@@ -31,7 +32,7 @@ class Player_Handler():
 
 class Player(turtle.Turtle):
 
-    def __init__(self, bullet_handler, stabalize_delay):
+    def __init__(self, bullet_handler):
         turtle.Turtle.__init__(self)
         self.penup()
         self.speed(0)
@@ -44,6 +45,8 @@ class Player(turtle.Turtle):
         self.lives = True
         self.stabalize_delay = 15
         self.bullet_handler = bullet_handler
+        self.has_power_up = False
+        self.power_up_timer = 0
 
     # move forward
     def increase_y_speed(self):
@@ -118,13 +121,42 @@ class Player(turtle.Turtle):
 
     def shoot(self):
         if self.bullet_delay <= 0:
-            bullet = self.bullet_handler.create_bullet(move_speed = 10, is_enemy = False)
-            bullet.setposition(self.xcor(), self.ycor())
-            bullet.setheading(90)
-            bullet.forward(15)
-            bullet.showturtle()
-            self.bullet_handler.bullet_list.append(bullet)
+            if self.has_power_up == True:
+                self.triple_shot()
+            else:
+                bullet = self.bullet_handler.create_bullet(move_speed = 10, is_enemy = False)
+                bullet.setposition(self.xcor(), self.ycor())
+                bullet.setheading(90)
+                bullet.forward(15)
+                bullet.showturtle()
+                self.bullet_handler.bullet_list.append(bullet)
+                self.bullet_delay = 10
+
+    def triple_shot(self):
+        if self.bullet_delay <= 0:
+            temp_bullet_list = []
+
+            for _ in range(3):
+                bullet = self.bullet_handler.create_bullet(move_speed = 10, is_enemy = False)
+                bullet.setposition(self.xcor(), self.ycor())
+                temp_bullet_list.append(bullet)
+
+            temp_bullet_list[0].setheading(90)
+            temp_bullet_list[1].setheading(70)
+            temp_bullet_list[2].setheading(110)
+
+            for bullet in temp_bullet_list:
+                bullet.forward(15)
+                bullet.showturtle()
+                self.bullet_handler.bullet_list.append(bullet)
+
+            for _ in range(3):
+                del temp_bullet_list[0]
+
             self.bullet_delay = 10
+
+            if self.power_up_timer + 10 < time.time():
+                self.has_power_up = False
 
     def reload_bullet(self):
         if self.bullet_delay > 0:

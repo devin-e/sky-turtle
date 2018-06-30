@@ -1,5 +1,6 @@
 import turtle
 import math     # for collision detection
+import time     # for power up timer
 
 
 class Game():
@@ -21,7 +22,7 @@ class Game():
         self.window.register_shape("conceal_boundary", ((0, 0), (620, 0), (620, 100), (0, 100)))
 
     def detect_collision(self, player, bullet_handler, enemy_handler,
-                        enemy_bullet_handler):
+                        enemy_bullet_handler, power_up_handler):
         for enemy in enemy_handler.enemy_list:
             for bullet in bullet_handler.bullet_list:
                 a = bullet.xcor() - enemy.xcor()
@@ -46,6 +47,15 @@ class Game():
 
             if distance < 12:
                 player.die()
+
+        for power_up in power_up_handler.power_up_list:
+            distance = math.hypot(power_up.xcor() - player.xcor(), power_up.ycor() - player.ycor())
+
+            if distance < 12:
+                power_up_handler.remove_power_up(power_up)
+                player.has_power_up = True
+                player.power_up_timer = time.time()
+
 
     def new_game(self):
         turtle.resetscreen()
