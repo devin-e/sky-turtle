@@ -68,6 +68,7 @@ class Wall_Section(turtle.Turtle):
 
     def __init__(self, shape, position, type):
         turtle.Turtle.__init__(self)
+        self.speed(0)
         self.hideturtle()
         self.penup()
         self.shape(shape)

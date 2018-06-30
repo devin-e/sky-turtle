@@ -7,6 +7,7 @@ from boundary_handler import Boundary_Handler
 from player_handler import Player_Handler
 from enemy_handler import Enemy_Handler
 from bullet_handler import Bullet_Handler
+from power_up_handler import Power_Up_Handler
 
 
 def main():
@@ -20,6 +21,8 @@ def main():
     enemy_handler = Enemy_Handler()
     enemy_bullet_handler = Bullet_Handler()
 
+    power_up_handler = Power_Up_Handler()
+
     game.new_game()
     game.draw_screen()
 
@@ -29,6 +32,8 @@ def main():
     player = player_handler.create_player(bullet_handler, stabalize_delay = 15)
 
     boundary_handler.create_boundaries()
+
+    power_up_handler.create_power_up((0, 100))
 
     fps = 60
     time_delta = 1.0/fps
@@ -59,6 +64,8 @@ def main():
             map_handler.border_test(player, map_handler.right_wall_list)
 
         player.stabalize()
+
+        power_up_handler.spin_power_ups()
 
     boundary_handler.reset_boundary(boundary_handler.boundary_list[0])
     boundary_handler.reset_boundary(boundary_handler.boundary_list[1])

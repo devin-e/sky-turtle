@@ -12,6 +12,7 @@ class Game():
         self.window.setup(700, 700)
         self.window.title("Sky Turtle")
         self.window.tracer(0)
+        self.window.colormode(255)
 
         # border pieces
         self.window.register_shape("vertical_wall", ((0, 0), (5, 0), (5, 100), (0, 100)))
