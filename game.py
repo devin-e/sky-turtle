@@ -25,45 +25,33 @@ class Game():
                         enemy_bullet_handler, power_up_handler):
         for enemy in enemy_handler.enemy_list:
             for bullet in bullet_handler.bullet_list:
-                a = bullet.xcor() - enemy.xcor()
-                b = bullet.ycor() - enemy.ycor()
-                distance = math.hypot(a, b)
-
-                if distance < 20:
+                # enemy and bullet collision
+                if math.hypot(bullet.xcor() - enemy.xcor(), bullet.ycor() - enemy.ycor()) < 20:
                     bullet_handler.remove_bullet(bullet)
                     enemy_handler.remove_enemy(enemy)
 
-            a = player.xcor() - enemy.xcor()
-            b = player.ycor() - enemy.ycor()
-            distance = math.hypot(a, b)
-
-            if distance < 18:
+            # enemy and player collision
+            if math.hypot(player.xcor() - enemy.xcor(), player.ycor() - enemy.ycor()) < 18:
                 player.die()
 
             for satellite in power_up_handler.satellite_list:
-                distance = math.hypot(satellite.xcor() - enemy.xcor(), satellite.ycor() - enemy.ycor())
-
-                if distance < 12:
+                #  enemy and satellite collision
+                if math.hypot(satellite.xcor() - enemy.xcor(), satellite.ycor() - enemy.ycor()) < 12:
                     enemy_handler.remove_enemy(enemy)
 
         for enemy_bullet in enemy_bullet_handler.bullet_list:
-            a = player.xcor() - enemy_bullet.xcor()
-            b = player.ycor() - enemy_bullet.ycor()
-            distance = math.hypot(a, b)
-
-            if distance < 12:
+            # enemy_bullet and player collision
+            if math.hypot(player.xcor() - enemy_bullet.xcor(), player.ycor() - enemy_bullet.ycor()) < 12:
                 player.die()
 
             for satellite in power_up_handler.satellite_list:
-                distance = math.hypot(satellite.xcor() - enemy_bullet.xcor(), satellite.ycor() - enemy_bullet.ycor())
-
-                if distance < 12:
+                # enemy bullet and satellite collision
+                if math.hypot(satellite.xcor() - enemy_bullet.xcor(), satellite.ycor() - enemy_bullet.ycor()) < 12:
                     enemy_bullet_handler.remove_bullet(enemy_bullet)
 
         for power_up in power_up_handler.power_up_list:
-            distance = math.hypot(power_up.xcor() - player.xcor(), power_up.ycor() - player.ycor())
-
-            if distance < 12:
+            # power_up and player collision
+            if math.hypot(power_up.xcor() - player.xcor(), power_up.ycor() - player.ycor()) < 12:
                 power_up_handler.activate_power_up(power_up, player)
 
     def new_game(self):
