@@ -47,7 +47,6 @@ class Player(turtle.Turtle):
         self.bullet_handler = bullet_handler
         self.has_triple_shot = False
         self.has_satellite = False
-        # self.power_up_type = "no power up"
         self.tripple_shot_timer = 0
 
     # move forward

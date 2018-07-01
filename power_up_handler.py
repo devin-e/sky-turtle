@@ -40,13 +40,10 @@ class Power_Up_Handler():
             power_up.setheading(90)
             power_up.life_timer = time.time()
 
-        player.power_up_timer = time.time()
-
     def handle_power_ups(self, player):
         self.animate_power_ups()
         if player.has_satellite:
             self.orbit_player(player)
-
 
     def orbit_player(self, player):
         for satellite in self.satellite_list:
