@@ -1,16 +1,20 @@
 import turtle
+import time
 
 
 class Power_Up_Handler():
 
     def __init__(self):
         self.power_up_list = []
+        self.satellite_list = []
+        self.x_orbit = 0
+        self.y_orbit = 35
 
-    def create_power_up(self, position):
-        power_up = Power_Up(position)
+    def create_power_up(self, position, type):
+        power_up = Power_Up(position, type)
         self.power_up_list.append(power_up)
 
-    def spin_power_ups(self):
+    def animate_power_ups(self):
         for power_up in self.power_up_list:
             power_up.spin()
             power_up.flash()
@@ -20,10 +24,56 @@ class Power_Up_Handler():
         power_up.hideturtle()
         self.power_up_list.remove(power_up)
 
+    def activate_power_up(self, power_up, player):
+        if power_up.type == "tripple shot":
+            player.has_triple_shot = True
+            self.remove_power_up(power_up)
+            player.tripple_shot_timer = time.time()
+        elif power_up.type == "satellite":
+            player.has_satellite = True
+            self.satellite_list.append(power_up)
+            self.power_up_list.remove(power_up)
+            power_up.setposition(player.xcor(), player.ycor() + self.y_orbit)
+            power_up.setheading(90)
+            power_up.life_timer = time.time()
+
+        player.power_up_timer = time.time()
+
+    def handle_power_ups(self, player):
+        self.animate_power_ups()
+        if player.has_satellite:
+            self.orbit_player(player)
+
+
+    def orbit_player(self, player):
+        for satellite in self.satellite_list:
+            satellite.flash()
+            if self.x_orbit <= 0 and self.y_orbit > 0:
+                self.x_orbit -= 1
+                self.y_orbit -= 1
+                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
+            elif self.y_orbit <= 0 and self.x_orbit < 0:
+                self.x_orbit += 1
+                self.y_orbit -= 1
+                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
+            elif self.y_orbit < 0 and self.x_orbit >= 0:
+                self.x_orbit += 1
+                self.y_orbit += 1
+                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
+            elif self.y_orbit >= 0 and self.x_orbit > 0:
+                self.x_orbit -= 1
+                self.y_orbit += 1
+                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
+
+            if satellite.life_timer + satellite.lifetime <= time.time():
+                satellite.clear()
+                satellite.hideturtle()
+                self.satellite_list.remove(satellite)
+
 
 class Power_Up(turtle.Turtle):
 
-    def __init__(self, position):
+    def __init__(self, position, type):
         turtle.Turtle.__init__(self)
         self.speed(0)
         self.hideturtle()
@@ -37,6 +87,9 @@ class Power_Up(turtle.Turtle):
         self.setposition(position)
         self.showturtle()
         self.spin_interval = 1
+        self.type = type
+        self.lifetime = 10
+        self.life_timer = 0
 
     def spin(self):
         if self.heading() < 360:

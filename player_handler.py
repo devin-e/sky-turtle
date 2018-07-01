@@ -45,8 +45,10 @@ class Player(turtle.Turtle):
         self.lives = True
         self.stabalize_delay = 15
         self.bullet_handler = bullet_handler
-        self.has_power_up = False
-        self.power_up_timer = 0
+        self.has_triple_shot = False
+        self.has_satellite = False
+        # self.power_up_type = "no power up"
+        self.tripple_shot_timer = 0
 
     # move forward
     def increase_y_speed(self):
@@ -121,7 +123,7 @@ class Player(turtle.Turtle):
 
     def shoot(self):
         if self.bullet_delay <= 0:
-            if self.has_power_up == True:
+            if self.has_triple_shot == True:
                 self.triple_shot()
             else:
                 bullet = self.bullet_handler.create_bullet(move_speed = 10, is_enemy = False)
@@ -155,8 +157,8 @@ class Player(turtle.Turtle):
 
             self.bullet_delay = 10
 
-            if self.power_up_timer + 10 < time.time():
-                self.has_power_up = False
+            if self.tripple_shot_timer + 10 < time.time():
+                self.has_triple_shot = False
 
     def reload_bullet(self):
         if self.bullet_delay > 0:

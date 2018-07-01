@@ -40,6 +40,12 @@ class Game():
             if distance < 18:
                 player.die()
 
+            for satellite in power_up_handler.satellite_list:
+                distance = math.hypot(satellite.xcor() - enemy.xcor(), satellite.ycor() - enemy.ycor())
+
+                if distance < 12:
+                    enemy_handler.remove_enemy(enemy)
+
         for enemy_bullet in enemy_bullet_handler.bullet_list:
             a = player.xcor() - enemy_bullet.xcor()
             b = player.ycor() - enemy_bullet.ycor()
@@ -48,14 +54,17 @@ class Game():
             if distance < 12:
                 player.die()
 
+            for satellite in power_up_handler.satellite_list:
+                distance = math.hypot(satellite.xcor() - enemy_bullet.xcor(), satellite.ycor() - enemy_bullet.ycor())
+
+                if distance < 12:
+                    enemy_bullet_handler.remove_bullet(enemy_bullet)
+
         for power_up in power_up_handler.power_up_list:
             distance = math.hypot(power_up.xcor() - player.xcor(), power_up.ycor() - player.ycor())
 
             if distance < 12:
-                power_up_handler.remove_power_up(power_up)
-                player.has_power_up = True
-                player.power_up_timer = time.time()
-
+                power_up_handler.activate_power_up(power_up, player)
 
     def new_game(self):
         turtle.resetscreen()

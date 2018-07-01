@@ -33,7 +33,8 @@ def main():
 
     boundary_handler.create_boundaries()
 
-    power_up_handler.create_power_up((0, 100))
+    power_up_handler.create_power_up((100, 100), "satellite")
+    power_up_handler.create_power_up((-100, 100), "tripple shot")
 
     fps = 60
     time_delta = 1.0/fps
@@ -65,7 +66,7 @@ def main():
 
         player.stabalize()
 
-        power_up_handler.spin_power_ups()
+        power_up_handler.handle_power_ups(player)
 
     boundary_handler.reset_boundary(boundary_handler.boundary_list[0])
     boundary_handler.reset_boundary(boundary_handler.boundary_list[1])
