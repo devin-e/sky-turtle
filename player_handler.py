@@ -43,7 +43,11 @@ class Player(turtle.Turtle):
         self.x_speed = 0
         self.bullet_delay = 0
         self.lives = True
-        self.stabalize_delay = 15
+        self.stabalize_delay = 5
+        self.stabalize_count = self.stabalize_delay
+        self.stabalization_factor = 0.2
+        self.acceleration = 1.0
+        self.max_speed = 4
         self.bullet_handler = bullet_handler
         self.has_triple_shot = False
         self.has_satellite = False
@@ -51,31 +55,31 @@ class Player(turtle.Turtle):
 
     # move forward
     def increase_y_speed(self):
-        if self.y_speed < 4:
-            self.y_speed += 1.0
+        if self.y_speed < self.max_speed:
+            self.y_speed += self.acceleration
 
-        self.stabalize_delay = 15
+        self.stabalize_count = self.stabalize_delay
 
     # move back
     def decrease_y_speed(self):
-        if self.y_speed > -4:
-            self.y_speed -= 1.0
+        if self.y_speed > -self.max_speed:
+            self.y_speed -= self.acceleration
 
-        self.stabalize_delay = 15
+        self.stabalize_count = self.stabalize_delay
 
     # move right
     def increase_x_speed(self):
-        if self.x_speed < 4:
-            self.x_speed += 1.0
+        if self.x_speed < self.max_speed:
+            self.x_speed += self.acceleration
 
-        self.stabalize_delay = 15
+        self.stabalize_count = self.stabalize_delay
 
     # move left
     def decrease_x_speed(self):
-        if self.x_speed > -4:
-            self.x_speed -= 1.0
+        if self.x_speed > -self.max_speed:
+            self.x_speed -= self.acceleration
 
-        self.stabalize_delay = 15
+        self.stabalize_count = self.stabalize_delay
 
     # prevent scrolling walls from pushing player off map
     def bounce(self, new_x_speed, new_y_speed):
@@ -97,28 +101,28 @@ class Player(turtle.Turtle):
 
     # gradually settles ship if player is not changing speed/direction
     def stabalize(self):
-        if self.x_speed >= 0.1 and self.stabalize_delay == 0:
-            self.x_speed = self.x_speed - 0.1
+        if self.x_speed >= 0.2 and self.stabalize_count == 0:
+            self.x_speed -= self.stabalization_factor
         elif 0 < self.x_speed < 0.2:
             self.x_speed = 0
 
-        if self.x_speed <= -0.1 and self.stabalize_delay == 0:
-            self.x_speed = self.x_speed + 0.1
+        if self.x_speed <= -0.2 and self.stabalize_count == 0:
+            self.x_speed += self.stabalization_factor
         elif 0 > self.x_speed > -0.2:
             self.x_speed = 0
 
-        if self.y_speed >= 0.1 and self.stabalize_delay == 0:
-            self.y_speed = self.y_speed - 0.1
+        if self.y_speed >= 0.2 and self.stabalize_count == 0:
+            self.y_speed -= self.stabalization_factor
         elif 0 < self.y_speed < 0.2:
             self.y_speed = 0
 
-        if self.y_speed <= -0.1 and self.stabalize_delay == 0:
-            self.y_speed = self.y_speed + 0.1
+        if self.y_speed <= -0.2 and self.stabalize_count == 0:
+            self.y_speed += self.stabalization_factor
         elif 0 > self.y_speed > -0.2:
             self.y_speed = 0
 
-        if self.stabalize_delay > 0:
-            self.stabalize_delay -= 1
+        if self.stabalize_count > 0:
+            self.stabalize_count -= 1
 
     def shoot(self):
         if self.bullet_delay <= 0:
