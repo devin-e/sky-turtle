@@ -1,5 +1,6 @@
 import turtle
 import time
+import math
 
 
 class Power_Up_Handler():
@@ -8,7 +9,9 @@ class Power_Up_Handler():
         self.power_up_list = []
         self.satellite_list = []
         self.x_orbit = 0
-        self.y_orbit = 35
+        self.orbit_radius = 35
+        self.y_orbit = self.orbit_radius
+        self.orbit_angle = 90
 
     def create_power_up(self, position, type):
         power_up = Power_Up(position, type)
@@ -33,7 +36,7 @@ class Power_Up_Handler():
             player.has_satellite = True
             self.satellite_list.append(power_up)
             self.power_up_list.remove(power_up)
-            power_up.setposition(player.xcor(), player.ycor() + self.y_orbit)
+            power_up.setposition(player.xcor(), player.ycor() + self.orbit_radius)
             power_up.setheading(90)
             power_up.life_timer = time.time()
 
@@ -48,22 +51,18 @@ class Power_Up_Handler():
     def orbit_player(self, player):
         for satellite in self.satellite_list:
             satellite.flash()
-            if self.x_orbit <= 0 and self.y_orbit > 0:
-                self.x_orbit -= 1
-                self.y_orbit -= 1
-                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
-            elif self.y_orbit <= 0 and self.x_orbit < 0:
-                self.x_orbit += 1
-                self.y_orbit -= 1
-                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
-            elif self.y_orbit < 0 and self.x_orbit >= 0:
-                self.x_orbit += 1
-                self.y_orbit += 1
-                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
-            elif self.y_orbit >= 0 and self.x_orbit > 0:
-                self.x_orbit -= 1
-                self.y_orbit += 1
-                satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
+
+            self.orbit_angle += (360 / 40)
+            if self.orbit_angle == 360:
+                self.orbit_angle = 0
+            self.y_orbit = self.orbit_radius * math.sin(math.radians(self.orbit_angle))
+
+            if 90 < self.orbit_angle < 270:
+                self.x_orbit = -(math.sqrt((self.orbit_radius ** 2) - (self.y_orbit ** 2)))
+            elif self.orbit_angle <= 90 or self.orbit_angle >= 270:
+                self.x_orbit = math.sqrt((self.orbit_radius ** 2) - (self.y_orbit ** 2))
+
+            satellite.setposition(player.xcor() + self.x_orbit, player.ycor() + self.y_orbit)
 
             if satellite.life_timer + satellite.lifetime <= time.time():
                 satellite.clear()
