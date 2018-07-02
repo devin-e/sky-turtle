@@ -39,6 +39,8 @@ def main():
     fps = 60
     time_delta = 1.0/fps
 
+    game.create_stats()
+
     while player.lives:
         time.sleep(time_delta)
         game.window.update()
@@ -67,6 +69,8 @@ def main():
         player.stabalize()
 
         power_up_handler.handle_power_ups(player)
+
+        game.update_stats(player)
 
     boundary_handler.reset_boundary(boundary_handler.boundary_list[0])
     boundary_handler.reset_boundary(boundary_handler.boundary_list[1])

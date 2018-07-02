@@ -32,7 +32,7 @@ class Enemy_Handler():
         for enemy in self.enemy_list:
             enemy.forward(enemy.move_speed)
 
-            if enemy.ycor() < -300:
+            if enemy.ycor() < -310:
                 self.remove_enemy(enemy)
 
     def remove_enemy(self, enemy):

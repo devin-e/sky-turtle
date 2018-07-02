@@ -53,6 +53,13 @@ class Player(turtle.Turtle):
         self.has_satellite = False
         self.tripple_shot_timer = 0
 
+        # stats
+        self.health = 100
+        self.health_change = False
+        self.score = 0
+        self.score_change = False
+        self.lives = 3
+
     # move forward
     def increase_y_speed(self):
         if self.y_speed < self.max_speed:
