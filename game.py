@@ -24,6 +24,7 @@ class Game():
     def detect_collision(self, player, bullet_handler, enemy_handler,
                         enemy_bullet_handler, power_up_handler):
         for enemy in enemy_handler.enemy_list:
+            killed_enemy = False
             for bullet in bullet_handler.bullet_list:
                 # enemy and bullet collision
                 if math.hypot(bullet.xcor() - enemy.xcor(), bullet.ycor() - enemy.ycor()) < 20:
@@ -31,17 +32,19 @@ class Game():
                     bullet_handler.remove_bullet(bullet)
                     player.score += 10
                     player.score_change = True
+                    killed_enemy = True
 
             # enemy and player collision
             if math.hypot(player.xcor() - enemy.xcor(), player.ycor() - enemy.ycor()) < 18:
                 player.die()
 
-            for satellite in power_up_handler.satellite_list:
-                #  enemy and satellite collision
-                if math.hypot(satellite.xcor() - enemy.xcor(), satellite.ycor() - enemy.ycor()) < 12:
-                    enemy_handler.remove_enemy(enemy)
-                    player.score += 10
-                    player.score_change = True
+            if killed_enemy == False:
+                for satellite in power_up_handler.satellite_list:
+                    #  enemy and satellite collision
+                    if math.hypot(satellite.xcor() - enemy.xcor(), satellite.ycor() - enemy.ycor()) < 12:
+                        enemy_handler.remove_enemy(enemy)
+                        player.score += 10
+                        player.score_change = True
 
         for enemy_bullet in enemy_bullet_handler.bullet_list:
             # enemy_bullet and player collision
