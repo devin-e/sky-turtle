@@ -28,7 +28,12 @@ class Blueprint_Handler():
             ["vertical_wall", (-300, 400), "vertical"],
             ["right_lean_wall", (-300, 400), "roof"],
             ["vertical_wall", (-225, 400), "vertical"],
-            ["left_lean_wall", (-225, 400), "floor"]
+            ["left_lean_wall", (-225, 400), "floor"],
+            ["vertical_wall", (-300, 400), "vertical"],
+            ["right_lean_wall", (-300, 400), "roof"],
+            ["right_lean_wall", (-225, 400), "roof"],
+            ["right_lean_wall", (-150, 400), "roof"],
+
         ]
 
         # blueprint format is [shape, position, type]
@@ -56,5 +61,8 @@ class Blueprint_Handler():
             ["vertical_wall", (220, 400), "vertical"],
             ["right_lean_wall", (220, 400), "floor"],
             ["vertical_wall", (295, 400), "vertical"],
-            ["left_lean_wall", (295, 400), "roof"]
+            ["left_lean_wall", (295, 400), "roof"],
+            ["left_lean_wall", (220, 400), "roof"],
+            ["left_lean_wall", (145, 400), "roof"],
+
         ]
